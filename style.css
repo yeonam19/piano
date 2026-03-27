@@ -167,11 +167,17 @@ body {
   position: relative;
 }
 
-.note-item .note-name {
-  font-size: 10px;
-  opacity: 0.6;
+.note-item .note-dur {
+  font-size: 9px;
+  opacity: 0.55;
   margin-top: 1px;
 }
+
+/* 박자별 너비 */
+.note-item.dur-8 { min-width: 36px; }
+.note-item.dur-4 { min-width: 48px; }
+.note-item.dur-2 { min-width: 68px; }
+.note-item.dur-1 { min-width: 88px; }
 
 .note-item.current {
   background: #4a90d9;
@@ -360,13 +366,17 @@ body {
     height: 46px;
   }
   .note-item {
-    min-width: 36px;
+    min-width: 32px;
     height: 36px;
     font-size: 14px;
     border-radius: 6px;
   }
-  .note-item .note-name {
-    font-size: 8px;
+  .note-item.dur-8 { min-width: 28px; }
+  .note-item.dur-4 { min-width: 38px; }
+  .note-item.dur-2 { min-width: 54px; }
+  .note-item.dur-1 { min-width: 70px; }
+  .note-item .note-dur {
+    font-size: 7px;
   }
   .key.white {
     width: 44px;

@@ -390,172 +390,143 @@ function playNote(frequency) {
 
 // ─── 동요 데이터 ───
 const NOTE_TO_KR = { 'C': '도', 'D': '레', 'E': '미', 'F': '파', 'G': '솔', 'A': '라', 'B': '시' };
+const DUR_SYMBOL = { 1: '𝅝', 2: '𝅗𝅥', 4: '♩', 8: '♪' };
+
+// 간편 표기 파서: "G4 G4 A2 |" → [{n:'G',d:4}, {n:'G',d:4}, {n:'A',d:2}, '|']
+function parseSong(str) {
+  return str.trim().split(/\s+/).map(t => {
+    if (t === '|') return '|';
+    const m = t.match(/^([A-G]#?)(\d)$/);
+    return m ? { n: m[1], d: parseInt(m[2]) } : { n: t, d: 4 };
+  });
+}
 
 const SONGS = {
   'school-bell': {
     title: '학교종',
     octave: 4,
-    // 학교종이 땡땡땡 | 어서 모이자 | 선생님이 우리를 | 기다리신다
-    notes: [
-      'G','G','A','A','G','G','E','|',
-      'G','G','E','E','D','|',
-      'G','G','A','A','G','G','E','|',
-      'G','G','E','D','C',
-    ],
+    // 학교종이 땡땡땡 어서 모이자 선생님이 우리를 기다리신다
+    notes: parseSong(
+      'G4 G4 A4 A4 G4 G4 E2 | G4 G4 E4 E4 D2 | G4 G4 A4 A4 G4 G4 E2 | G4 G4 E4 D4 C2'
+    ),
   },
   'butterfly': {
     title: '나비야',
     octave: 4,
-    // 나비야 나비야 | 이리 날아 오너라 | 노랑나비 흰나비 | 춤을 추며 오너라
-    notes: [
-      'G','E','E','|','F','D','D','|',
-      'C','D','E','F','G','G','G','|',
-      'G','E','E','E','|','F','D','D','D','|',
-      'C','E','G','G','E','|',
-      'D','D','D','D','D','E','F','|',
-      'E','E','E','E','E','F','G','|',
-      'G','E','E','|','F','D','D','|',
-      'C','E','G','G','C',
-    ],
+    // 나비야 나비야 이리날아 오너라
+    notes: parseSong(
+      'G4 E4 E2 | F4 D4 D2 | C4 D4 E4 F4 G4 G4 G2 | ' +
+      'G4 E4 E2 | F4 D4 D2 | C4 E4 G4 G4 E2 | ' +
+      'D4 D4 D4 D4 D4 E4 F2 | E4 E4 E4 E4 E4 F4 G2 | ' +
+      'G4 E4 E2 | F4 D4 D2 | C4 E4 G4 G4 C2'
+    ),
   },
   'airplane': {
     title: '비행기',
     octave: 4,
-    // 떴다 떴다 비행기 | 날아라 날아라 | 높이 높이 날아라 | 우리 비행기
-    notes: [
-      'E','D','C','D','E','E','E','|',
-      'D','D','D','|','E','G','G','|',
-      'E','D','C','D','E','E','E','|',
-      'E','D','D','E','D','C',
-    ],
+    // 떴다떴다 비행기 날아라 날아라
+    notes: parseSong(
+      'E4 D4 C4 D4 E4 E4 E2 | D4 D4 D2 E4 G4 G2 | ' +
+      'E4 D4 C4 D4 E4 E4 E2 | E4 D4 D4 E4 D4 C2'
+    ),
   },
   'twinkle': {
     title: '반짝반짝 작은별',
     octave: 4,
-    notes: [
-      'C','C','G','G','A','A','G','|',
-      'F','F','E','E','D','D','C','|',
-      'G','G','F','F','E','E','D','|',
-      'G','G','F','F','E','E','D','|',
-      'C','C','G','G','A','A','G','|',
-      'F','F','E','E','D','D','C',
-    ],
+    notes: parseSong(
+      'C4 C4 G4 G4 A4 A4 G2 | F4 F4 E4 E4 D4 D4 C2 | ' +
+      'G4 G4 F4 F4 E4 E4 D2 | G4 G4 F4 F4 E4 E4 D2 | ' +
+      'C4 C4 G4 G4 A4 A4 G2 | F4 F4 E4 E4 D4 D4 C2'
+    ),
   },
   'three-bears': {
     title: '곰 세 마리',
     octave: 4,
-    notes: [
-      'C','C','C','C','C','D','E','|',
-      'E','D','E','F','G','|',
-      'G','G','G','G','E','E','E','E','|',
-      'C','E','G','G','E','|',
-      'F','F','F','F','E','E','E','|',
-      'D','D','D','D','G','|',
-      'F','F','F','F','E','E','E','|',
-      'D','D','E','D','C',
-    ],
+    // 곰세마리가 한집에있어 아빠곰 엄마곰 애기곰
+    notes: parseSong(
+      'C8 C8 C8 C8 C8 D8 E4 E8 D8 E8 F8 G2 | ' +
+      'G8 G8 G8 G8 E8 E8 E8 E8 C4 E4 G4 G4 E2 | ' +
+      'F4 F4 F4 E4 E4 E4 | D4 D4 D4 D4 G2 | ' +
+      'F4 F4 F4 E4 E4 E4 | D4 D4 E4 D4 C2'
+    ),
   },
   'mountain-rabbit': {
     title: '산토끼',
     octave: 4,
-    notes: [
-      'E','E','F','G','G','|',
-      'A','A','G','|',
-      'A','A','G','|',
-      'E','E','F','G','G','|',
-      'A','G','E','D','C','|',
-      'D','D','E','D','C','|',
-      'D','D','E','D','C',
-    ],
+    // 산토끼 토끼야 어디를 가느냐
+    notes: parseSong(
+      'G4 G4 A4 B4 B2 | A4 A4 G2 | A4 A4 G2 | ' +
+      'G4 G4 A4 B4 B2 | A4 G4 E4 D4 C2 | ' +
+      'D4 D4 E4 D4 C2 | D4 D4 E4 D4 C2'
+    ),
   },
   'spring-girl': {
     title: '봄나들이',
     octave: 4,
-    // 나오너라 나오너라 | 봄나들이 가자
-    notes: [
-      'G','E','G','E','G','A','G','|',
-      'E','C','D','E','D','|',
-      'G','E','G','E','G','A','G','|',
-      'E','D','E','D','C',
-    ],
+    // 나오너라 나오너라
+    notes: parseSong(
+      'G4 E8 G8 E4 G4 A4 G2 | E4 C4 D4 E4 D2 | ' +
+      'G4 E8 G8 E4 G4 A4 G2 | E4 D4 E4 D4 C2'
+    ),
   },
   'alphabet': {
     title: 'ABC송',
     octave: 4,
-    notes: [
-      'C','C','G','G','A','A','G','|',
-      'F','F','E','E','D','D','C','|',
-      'G','G','F','E','E','D','|',
-      'G','G','F','E','E','D','|',
-      'C','C','G','G','A','A','G','|',
-      'F','F','E','E','D','D','C',
-    ],
+    notes: parseSong(
+      'C4 C4 G4 G4 A4 A4 G2 | F4 F4 E4 E4 D4 D4 C2 | ' +
+      'G4 G4 F2 E4 E4 D2 | G4 G4 F2 E4 E4 D2 | ' +
+      'C4 C4 G4 G4 A4 A4 G2 | F4 F4 E4 E4 D4 D4 C2'
+    ),
   },
   'head-shoulders': {
     title: '머리 어깨 무릎 발',
     octave: 4,
-    notes: [
-      'C','C','E','E','G','G','E','|',
-      'F','F','E','E','D','|',
-      'C','C','E','E','G','G','E','|',
-      'F','E','D','E','C','|',
-      'G','G','G','A','G','|',
-      'E','E','E','F','E','|',
-      'C','C','E','E','G','G','E','|',
-      'F','E','D','E','C',
-    ],
+    notes: parseSong(
+      'C8 C8 E8 E8 G8 G8 E4 | F8 F8 E8 E8 D2 | ' +
+      'C8 C8 E8 E8 G8 G8 E4 | F4 E4 D4 E4 C2 | ' +
+      'G4 G4 G8 A8 G4 | E4 E4 E8 F8 E4 | ' +
+      'C8 C8 E8 E8 G8 G8 E4 | F4 E4 D4 E4 C2'
+    ),
   },
   'elephant': {
     title: '코끼리 아저씨',
     octave: 4,
-    notes: [
-      'C','E','G','G','A','G','E','|',
-      'C','E','D','D','C','|',
-      'C','E','G','G','A','G','E','|',
-      'C','D','E','D','C','|',
-      'G','G','E','G','A','A','G','|',
-      'E','E','D','E','F','F','E','|',
-      'C','E','G','G','A','G','E','|',
-      'C','D','E','D','C',
-    ],
+    // 코끼리 아저씨는 코가 손이래
+    notes: parseSong(
+      'E4 E4 G4 G4 A4 G4 E2 | E4 E4 D4 D4 C2 | ' +
+      'E4 E4 G4 G4 A4 G4 E2 | E4 D4 E4 D4 C2 | ' +
+      'G4 G4 E4 G4 A4 A4 G2 | E4 E4 D4 E4 F4 F4 E2 | ' +
+      'E4 E4 G4 G4 A4 G4 E2 | E4 D4 E4 D4 C2'
+    ),
   },
   'frog': {
     title: '개구리',
     octave: 4,
-    notes: [
-      'C','D','E','F','E','D','C','|',
-      'E','F','G','A','G','F','E','|',
-      'C','C','C','C','|',
-      'C','D','E','F','E','D','C',
-    ],
+    notes: parseSong(
+      'C4 D4 E4 F4 E4 D4 C2 | E4 F4 G4 A4 G4 F4 E2 | ' +
+      'C2 C2 C2 C2 | C4 D4 E4 F4 E4 D4 C2'
+    ),
   },
   'round-round': {
     title: '둥글게 둥글게',
     octave: 4,
-    notes: [
-      'G','G','G','E','G','|',
-      'A','A','A','G','A','|',
-      'G','G','E','E','D','|',
-      'E','E','D','D','C','|',
-      'G','G','G','E','G','|',
-      'A','A','A','G','A','|',
-      'G','E','G','D','D','|',
-      'E','D','E','D','C',
-    ],
+    notes: parseSong(
+      'G4 G8 G8 E4 G4 | A4 A8 A8 G4 A4 | ' +
+      'G4 G4 E4 E4 D2 | E4 E4 D4 D4 C2 | ' +
+      'G4 G8 G8 E4 G4 | A4 A8 A8 G4 A4 | ' +
+      'G4 E4 G4 D4 D2 | E4 D4 E4 D4 C2'
+    ),
   },
   'arirang': {
     title: '아리랑',
     octave: 4,
-    notes: [
-      'E','E','A','A','G','A','|',
-      'G','E','D','E','|',
-      'E','E','A','A','G','A','|',
-      'G','E','D','E','|',
-      'A','A','G','A','G','E','|',
-      'D','E','G','A','G','E','|',
-      'E','E','A','A','G','A','|',
-      'G','E','D','E',
-    ],
+    // 아리랑 아리랑 아라리요
+    notes: parseSong(
+      'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2 | ' +
+      'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2 | ' +
+      'A2 A4 G8 A8 G4 E4 | D4 E4 G4 A4 G4 E4 | ' +
+      'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2'
+    ),
   },
 };
 
@@ -600,7 +571,7 @@ function startPractice(songId) {
     active: true,
     songId,
     notes: song.notes,
-    playableNotes,
+    playableNotes,         // [{n, d}, ...]
     currentIndex: 0,
     correctCount: 0,
     wrongCount: 0,
@@ -639,23 +610,26 @@ function renderNoteTrack() {
   noteTrack.innerHTML = '';
   let playableIdx = 0;
 
-  practiceState.notes.forEach(n => {
+  practiceState.notes.forEach(item => {
     const el = document.createElement('div');
 
-    if (n === '|') {
+    if (item === '|') {
       el.className = 'note-item bar';
     } else {
       el.className = 'note-item';
       el.dataset.playableIndex = playableIdx;
 
+      // 박자에 따른 너비 클래스
+      el.classList.add('dur-' + item.d);
+
       const kr = document.createElement('span');
-      kr.textContent = NOTE_TO_KR[n] || n;
+      kr.textContent = NOTE_TO_KR[item.n] || item.n;
       el.appendChild(kr);
 
-      const name = document.createElement('span');
-      name.className = 'note-name';
-      name.textContent = n;
-      el.appendChild(name);
+      const durLine = document.createElement('span');
+      durLine.className = 'note-dur';
+      durLine.textContent = (DUR_SYMBOL[item.d] || '♩') + ' ' + item.n;
+      el.appendChild(durLine);
 
       if (playableIdx === 0) el.classList.add('current');
       playableIdx++;
@@ -684,7 +658,7 @@ function checkNote(note) {
   const { playableNotes, currentIndex } = practiceState;
   if (currentIndex >= playableNotes.length) return;
 
-  const expected = playableNotes[currentIndex];
+  const expected = playableNotes[currentIndex].n;
   const currentEl = noteTrack.querySelector(`.note-item[data-playable-index="${currentIndex}"]`);
 
   if (note === expected) {
@@ -735,7 +709,7 @@ function highlightTargetKey() {
   const { playableNotes, currentIndex, octave } = practiceState;
   if (currentIndex >= playableNotes.length) return;
 
-  const targetNote = playableNotes[currentIndex];
+  const targetNote = playableNotes[currentIndex].n;
   const targetEl = keyboard.querySelector(
     `.key[data-note="${targetNote}"][data-octave="${octave}"]`
   );
