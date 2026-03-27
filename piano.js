@@ -79,7 +79,9 @@ let dragState = {
   isDragging: false,
   startX: 0,
   scrollLeft: 0,
-  movedDistance: 0,  // 클릭 vs 드래그 구분용
+  movedDistance: 0,
+  touchStartX: 0,
+  touchStartY: 0,
 };
 
 const DRAG_THRESHOLD = 8; // 이 픽셀 이상 이동하면 드래그로 판정
@@ -171,20 +173,31 @@ function createKeyElement(key, octave, kbHint) {
 
   // 터치
   el.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (!isDragMode) {
+    if (isDragMode) {
+      // 드래그 모드: 터치 시작 위치 기록, 네이티브 스크롤 허용
+      dragState.touchStartX = e.touches[0].pageX;
+      dragState.touchStartY = e.touches[0].pageY;
+    } else {
+      e.preventDefault();
       startNote(key.note, octave, el);
     }
-  });
+  }, { passive: false });
   el.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    if (isDragMode && dragState.movedDistance < DRAG_THRESHOLD) {
-      startNote(key.note, octave, el);
-      setTimeout(() => stopNote(key.note, octave, el), 200);
+    if (isDragMode) {
+      // 터치 이동 거리가 작으면 탭으로 판정 → 소리 재생
+      const touch = e.changedTouches[0];
+      const dx = Math.abs(touch.pageX - dragState.touchStartX);
+      const dy = Math.abs(touch.pageY - dragState.touchStartY);
+      if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
+        e.preventDefault();
+        startNote(key.note, octave, el);
+        setTimeout(() => stopNote(key.note, octave, el), 200);
+      }
     } else {
+      e.preventDefault();
       stopNote(key.note, octave, el);
     }
-  });
+  }, { passive: false });
 
   return el;
 }
@@ -252,31 +265,7 @@ document.addEventListener('mouseup', () => {
   }
 });
 
-// 터치 드래그
-viewport.addEventListener('touchstart', (e) => {
-  if (!isDragMode) return;
-  const touch = e.touches[0];
-  dragState.isDragging = true;
-  dragState.startX = touch.pageX;
-  dragState.scrollLeft = viewport.scrollLeft;
-  dragState.movedDistance = 0;
-  viewport.classList.add('dragging');
-}, { passive: true });
-
-viewport.addEventListener('touchmove', (e) => {
-  if (!isDragMode || !dragState.isDragging) return;
-  const touch = e.touches[0];
-  const dx = touch.pageX - dragState.startX;
-  dragState.movedDistance = Math.abs(dx);
-  viewport.scrollLeft = dragState.scrollLeft - dx;
-}, { passive: true });
-
-viewport.addEventListener('touchend', () => {
-  if (dragState.isDragging) {
-    dragState.isDragging = false;
-    viewport.classList.remove('dragging');
-  }
-});
+// 터치 드래그: 네이티브 스크롤에 위임 (touch-action: pan-x)
 
 // ─── 모드 전환 ───
 modeToggle.addEventListener('click', () => {

@@ -90,6 +90,11 @@ body {
   flex-shrink: 0;
 }
 
+/* 드래그 모드: 터치 수평 스크롤 허용 */
+.drag-mode #keyboard {
+  touch-action: pan-x;
+}
+
 /* 드래그 모드: 건반 위에 커서 변경 */
 #keyboard-viewport.drag-mode {
   cursor: grab;
