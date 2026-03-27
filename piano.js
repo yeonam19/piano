@@ -108,9 +108,198 @@ const INSTRUMENTS = {
   },
 };
 
+// ─── 드럼 합성 ───
+// 건반 음에 따라 다른 퍼커션 매핑
+const DRUM_MAP = {
+  'C':  'kick',
+  'C#': 'rimshot',
+  'D':  'snare',
+  'D#': 'clap',
+  'E':  'closedhat',
+  'F':  'openhat',
+  'F#': 'lowtom',
+  'G':  'midtom',
+  'G#': 'hightom',
+  'A':  'crash',
+  'A#': 'ride',
+  'B':  'cowbell',
+};
+
+function playDrum(note) {
+  const now = audioCtx.currentTime;
+  const type = DRUM_MAP[note] || 'kick';
+  const allOsc = [];
+  let noiseSource = null;
+
+  const masterGain = audioCtx.createGain();
+  masterGain.connect(audioCtx.destination);
+
+  if (type === 'kick') {
+    // 킥: 사인파 피치 드롭
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.8, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.4);
+    allOsc.push(osc);
+  } else if (type === 'snare') {
+    // 스네어: 삼각파 + 노이즈
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(200, now);
+    const og = audioCtx.createGain();
+    og.gain.setValueAtTime(0.4, now);
+    og.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.connect(og);
+    og.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.15);
+    allOsc.push(osc);
+
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buf;
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0.5, now);
+    ng.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'highpass';
+    filt.frequency.setValueAtTime(1000, now);
+    noiseSource.connect(filt);
+    filt.connect(ng);
+    ng.connect(masterGain);
+    noiseSource.start(now);
+    noiseSource.stop(now + 0.2);
+  } else if (type === 'closedhat' || type === 'openhat') {
+    const dur = type === 'closedhat' ? 0.08 : 0.3;
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buf;
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0.3, now);
+    ng.gain.exponentialRampToValueAtTime(0.01, now + dur);
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'highpass';
+    filt.frequency.setValueAtTime(5000, now);
+    noiseSource.connect(filt);
+    filt.connect(ng);
+    ng.connect(masterGain);
+    noiseSource.start(now);
+    noiseSource.stop(now + dur);
+  } else if (type === 'lowtom' || type === 'midtom' || type === 'hightom') {
+    const freq = type === 'lowtom' ? 80 : type === 'midtom' ? 120 : 180;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq * 1.5, now);
+    osc.frequency.exponentialRampToValueAtTime(freq, now + 0.05);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.6, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.3);
+    allOsc.push(osc);
+  } else if (type === 'crash' || type === 'ride') {
+    const dur = type === 'crash' ? 0.8 : 0.4;
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buf;
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0.35, now);
+    ng.gain.exponentialRampToValueAtTime(0.01, now + dur);
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(type === 'crash' ? 6000 : 8000, now);
+    filt.Q.setValueAtTime(0.5, now);
+    noiseSource.connect(filt);
+    filt.connect(ng);
+    ng.connect(masterGain);
+    noiseSource.start(now);
+    noiseSource.stop(now + dur);
+  } else if (type === 'clap') {
+    const dur = 0.15;
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = buf;
+    const ng = audioCtx.createGain();
+    ng.gain.setValueAtTime(0, now);
+    ng.gain.linearRampToValueAtTime(0.5, now + 0.01);
+    ng.gain.exponentialRampToValueAtTime(0.01, now + dur);
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(1500, now);
+    filt.Q.setValueAtTime(1, now);
+    noiseSource.connect(filt);
+    filt.connect(ng);
+    ng.connect(masterGain);
+    noiseSource.start(now);
+    noiseSource.stop(now + dur);
+  } else if (type === 'rimshot') {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, now);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.5, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.06);
+    allOsc.push(osc);
+  } else if (type === 'cowbell') {
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    osc1.type = 'square';
+    osc2.type = 'square';
+    osc1.frequency.setValueAtTime(560, now);
+    osc2.frequency.setValueAtTime(845, now);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.3, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(700, now);
+    filt.Q.setValueAtTime(3, now);
+    osc1.connect(filt);
+    osc2.connect(filt);
+    filt.connect(g);
+    g.connect(masterGain);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.2);
+    osc2.stop(now + 0.2);
+    allOsc.push(osc1, osc2);
+  }
+
+  masterGain.gain.setValueAtTime(masterGain.gain.value || 1, now);
+  return { gain: masterGain, oscillators: allOsc, noiseSource };
+}
+
 let currentInstrument = 'piano';
 
 // ─── 소리 합성 ───
+function playSound(frequency, note) {
+  if (currentInstrument === 'drum') {
+    return playDrum(note);
+  }
+  return playNote(frequency);
+}
+
 function playNote(frequency) {
   const now = audioCtx.currentTime;
   const inst = INSTRUMENTS[currentInstrument];
@@ -219,7 +408,7 @@ const KB_MAP_OCT1 = { 'a':'C', 'w':'C#', 's':'D', 'e':'D#', 'd':'E', 'f':'F', 't
 const KB_MAP_OCT2 = { 'k':'C', 'o':'C#', 'l':'D', 'p':'D#', ';':'E', "'":"F" };
 
 let currentOctave = 3;
-let isDragMode = false;
+let isDragMode = true;
 const activeNotes = new Map();
 const viewport = document.getElementById('keyboard-viewport');
 const keyboard = document.getElementById('keyboard');
@@ -237,9 +426,17 @@ let dragState = {
 
 const DRAG_THRESHOLD = 8;
 
+// 드럼 라벨 (짧은 한글)
+const DRUM_LABELS = {
+  'C': 'Kick', 'C#': 'Rim', 'D': 'Snare', 'D#': 'Clap',
+  'E': 'HH', 'F': 'OH', 'F#': 'LTom', 'G': 'MTom',
+  'G#': 'HTom', 'A': 'Crash', 'A#': 'Ride', 'B': 'Bell',
+};
+
 // ─── 악기 변경 ───
 instrumentSelect.addEventListener('change', () => {
   currentInstrument = instrumentSelect.value;
+  buildKeyboard();
 });
 
 // ─── 건반 생성 ───
@@ -292,7 +489,12 @@ function createKeyElement(key, octave, kbHint) {
   el.dataset.octave = octave;
 
   const label = document.createElement('span');
-  label.textContent = key.type === 'white' ? `${key.note}${octave}` : key.note;
+  if (currentInstrument === 'drum') {
+    label.textContent = DRUM_LABELS[key.note] || key.note;
+    label.style.fontSize = '10px';
+  } else {
+    label.textContent = key.type === 'white' ? `${key.note}${octave}` : key.note;
+  }
   el.appendChild(label);
 
   if (kbHint) {
@@ -366,7 +568,7 @@ function startNote(note, octave, el) {
   if (activeNotes.has(noteId)) return;
 
   const freq = getFrequency(note, octave);
-  const sound = playNote(freq);
+  const sound = playSound(freq, note);
   activeNotes.set(noteId, sound);
 
   if (el) el.classList.add('active');
@@ -508,4 +710,11 @@ function updateOctaveDisplay() {
 }
 
 // ─── 초기화 ───
+// 드래그 모드가 기본
+modeToggle.classList.add('active');
+modeToggle.textContent = '🎹 페이지 모드';
+viewport.classList.add('drag-mode');
+document.getElementById('octave-down').style.display = 'none';
+document.getElementById('octave-up').style.display = 'none';
+document.getElementById('octave-display').style.display = 'none';
 buildKeyboard();
