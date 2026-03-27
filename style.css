@@ -1,0 +1,133 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+#piano {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.controls button {
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #0f3460;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.controls button:hover {
+  background: #0f3460;
+}
+
+#octave-display {
+  color: #e0e0e0;
+  font-size: 16px;
+  min-width: 100px;
+  text-align: center;
+}
+
+#keyboard {
+  display: flex;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.key {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.05s;
+}
+
+.key.white {
+  width: 52px;
+  height: 220px;
+  background: linear-gradient(to bottom, #f8f8f8, #fff);
+  border: 1px solid #bbb;
+  border-radius: 0 0 6px 6px;
+  z-index: 1;
+  color: #999;
+}
+
+.key.white:hover {
+  background: linear-gradient(to bottom, #e8e8e8, #f0f0f0);
+}
+
+.key.white.active {
+  background: linear-gradient(to bottom, #ddd, #e8e8e8);
+  transform: scaleY(0.99);
+  border-color: #999;
+}
+
+.key.black {
+  width: 34px;
+  height: 140px;
+  background: linear-gradient(to bottom, #333, #111);
+  border: 1px solid #000;
+  border-radius: 0 0 4px 4px;
+  margin-left: -17px;
+  margin-right: -17px;
+  z-index: 2;
+  color: #666;
+}
+
+.key.black:hover {
+  background: linear-gradient(to bottom, #444, #222);
+}
+
+.key.black.active {
+  background: linear-gradient(to bottom, #555, #333);
+  transform: scaleY(0.98);
+}
+
+.key-hint {
+  color: #555;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .key.white {
+    width: 44px;
+    height: 180px;
+  }
+  .key.black {
+    width: 28px;
+    height: 110px;
+    margin-left: -14px;
+    margin-right: -14px;
+  }
+  .key-hint {
+    display: none;
+  }
+}
