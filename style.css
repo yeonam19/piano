@@ -19,12 +19,19 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  width: 100%;
 }
 
 .controls {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.controls-divider {
+  width: 1px;
+  height: 24px;
+  background: #0f3460;
 }
 
 .controls button {
@@ -36,10 +43,17 @@ body {
   cursor: pointer;
   font-size: 14px;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .controls button:hover {
   background: #0f3460;
+}
+
+.controls button.active {
+  background: #0f3460;
+  border-color: #4a90d9;
+  color: #fff;
 }
 
 #octave-display {
@@ -49,12 +63,40 @@ body {
   text-align: center;
 }
 
+/* 뷰포트: 드래그 모드에서 건반이 넘칠 때 가림 */
+#keyboard-viewport {
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  scrollbar-width: none;
+}
+
+#keyboard-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+#keyboard-viewport.drag-mode {
+  overflow-x: scroll;
+  justify-content: flex-start;
+}
+
 #keyboard {
   display: flex;
   position: relative;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  flex-shrink: 0;
+}
+
+/* 드래그 모드: 건반 위에 커서 변경 */
+#keyboard-viewport.drag-mode {
+  cursor: grab;
+}
+
+#keyboard-viewport.drag-mode.dragging {
+  cursor: grabbing;
 }
 
 .key {
@@ -67,6 +109,7 @@ body {
   font-size: 12px;
   font-weight: 600;
   transition: background 0.05s;
+  flex-shrink: 0;
 }
 
 .key.white {
@@ -110,10 +153,52 @@ body {
   transform: scaleY(0.98);
 }
 
+/* 옥타브 구분선 */
+.octave-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #aaa;
+  background: rgba(0,0,0,0.15);
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 0 0 4px 4px;
+}
+
 .key-hint {
   color: #555;
   font-size: 13px;
   margin-top: 4px;
+}
+
+/* 드래그 모드 스크롤바 표시 */
+.scroll-indicator {
+  display: none;
+  width: 80%;
+  max-width: 600px;
+  height: 4px;
+  background: #16213e;
+  border-radius: 2px;
+  position: relative;
+  margin-top: -10px;
+}
+
+.scroll-indicator.visible {
+  display: block;
+}
+
+.scroll-thumb {
+  height: 100%;
+  background: #4a90d9;
+  border-radius: 2px;
+  position: absolute;
+  transition: left 0.1s;
 }
 
 @media (max-width: 768px) {
