@@ -543,11 +543,11 @@ function scrollNoteTrack() {
   const currentEl = noteTrack.querySelector('.note-item.current');
   if (!currentEl) return;
 
-  const trackRect = noteDisplay.getBoundingClientRect();
-  const itemRect = currentEl.getBoundingClientRect();
-  const offset = itemRect.left - trackRect.left - trackRect.width / 3;
+  // offsetLeft는 transform에 영향받지 않으므로 안정적
+  const displayWidth = noteDisplay.clientWidth;
+  const offset = currentEl.offsetLeft - displayWidth / 3;
 
-  noteTrack.style.transform = `translateX(${-offset}px)`;
+  noteTrack.style.transform = `translateX(${-Math.max(0, offset)}px)`;
 }
 
 function checkNote(note) {
