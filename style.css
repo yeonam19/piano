@@ -18,7 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
   max-width: 1200px;
   padding: 0 16px;
@@ -84,7 +84,147 @@ body {
   text-align: center;
 }
 
-/* 뷰포트 */
+/* ─── 연습 모드 ─── */
+#practice-panel {
+  width: 100%;
+}
+
+.practice-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.practice-header select,
+.practice-header button {
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #0f3460;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.practice-header select option {
+  background: #16213e;
+  color: #e0e0e0;
+}
+
+.practice-header button:hover:not(:disabled),
+.practice-header select:hover {
+  background: #0f3460;
+}
+
+.practice-header button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#practice-score {
+  color: #e0e0e0;
+  font-size: 14px;
+  margin-left: auto;
+}
+
+#note-display {
+  width: 100%;
+  height: 64px;
+  background: #16213e;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+#note-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 4px;
+  padding: 0 12px;
+  transition: transform 0.25s ease;
+}
+
+.note-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: #0f3460;
+  color: #8899bb;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.note-item .note-name {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 1px;
+}
+
+.note-item.current {
+  background: #4a90d9;
+  color: #fff;
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(74, 144, 217, 0.5);
+}
+
+.note-item.played {
+  background: #1a6b3c;
+  color: #7fda9f;
+}
+
+.note-item.wrong {
+  background: #6b1a1a;
+  color: #da7f7f;
+  animation: shake 0.3s;
+}
+
+.note-item.bar {
+  min-width: 4px;
+  width: 4px;
+  background: #2a3a5e;
+  height: 32px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0) scale(1.15); }
+  25% { transform: translateX(-4px) scale(1.15); }
+  75% { transform: translateX(4px) scale(1.15); }
+}
+
+/* 완료 메시지 */
+.practice-complete {
+  color: #7fda9f;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  padding: 16px;
+}
+
+/* 건반 하이라이트 (연습 모드) */
+.key.hint-glow {
+  box-shadow: 0 0 12px 4px rgba(74, 144, 217, 0.6);
+  z-index: 10;
+}
+
+.key.white.hint-glow {
+  background: linear-gradient(to bottom, #d0e4ff, #e8f0ff);
+}
+
+.key.black.hint-glow {
+  background: linear-gradient(to bottom, #3a5a8a, #2a4060);
+}
+
+/* ─── 뷰포트 ─── */
 #keyboard-viewport {
   overflow: hidden;
   width: 100%;
@@ -132,7 +272,7 @@ body {
   padding-bottom: 12px;
   font-size: 12px;
   font-weight: 600;
-  transition: background 0.05s;
+  transition: background 0.05s, box-shadow 0.2s;
   flex-shrink: 0;
 }
 
@@ -192,6 +332,9 @@ body {
     flex-wrap: wrap;
     justify-content: center;
   }
+  .practice-header {
+    flex-wrap: wrap;
+  }
   .key.white {
     width: 44px;
     height: 180px;
@@ -204,5 +347,13 @@ body {
   }
   .key-hint {
     display: none;
+  }
+  .note-item {
+    min-width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+  #note-display {
+    height: 54px;
   }
 }

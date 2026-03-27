@@ -28,6 +28,25 @@
       </div>
       <button id="mode-toggle">🔀 드래그 모드</button>
     </div>
+
+    <!-- 연습 모드 -->
+    <div id="practice-panel">
+      <div class="practice-header">
+        <select id="song-select">
+          <option value="">🎵 동요 연습</option>
+          <option value="school-bell">학교종</option>
+          <option value="butterfly">나비야</option>
+          <option value="airplane">비행기</option>
+        </select>
+        <button id="practice-start" disabled>▶ 시작</button>
+        <button id="practice-stop" style="display:none">■ 그만</button>
+        <span id="practice-score"></span>
+      </div>
+      <div id="note-display" style="display:none">
+        <div id="note-track"></div>
+      </div>
+    </div>
+
     <div id="keyboard-viewport">
       <div id="keyboard"></div>
     </div>

@@ -388,6 +388,236 @@ function playNote(frequency) {
   return { gain: masterGain, oscillators: allOsc, noiseSource };
 }
 
+// ─── 동요 데이터 ───
+const NOTE_TO_KR = { 'C': '도', 'D': '레', 'E': '미', 'F': '파', 'G': '솔', 'A': '라', 'B': '시' };
+
+const SONGS = {
+  'school-bell': {
+    title: '학교종',
+    octave: 4,
+    // 학교종이 땡땡땡 | 어서 모이자 | 선생님이 우리를 | 기다리신다
+    notes: [
+      'G','G','A','A','G','G','E','|',
+      'G','G','E','E','D','|',
+      'G','G','A','A','G','G','E','|',
+      'G','G','E','D','C',
+    ],
+  },
+  'butterfly': {
+    title: '나비야',
+    octave: 4,
+    // 나비야 나비야 | 이리 날아 오너라 | 노랑나비 흰나비 | 춤을 추며 오너라
+    notes: [
+      'G','E','E','|','F','D','D','|',
+      'C','D','E','F','G','G','G','|',
+      'G','E','E','E','|','F','D','D','D','|',
+      'C','E','G','G','E','|',
+      'D','D','D','D','D','E','F','|',
+      'E','E','E','E','E','F','G','|',
+      'G','E','E','|','F','D','D','|',
+      'C','E','G','G','C',
+    ],
+  },
+  'airplane': {
+    title: '비행기',
+    octave: 4,
+    // 떴다 떴다 비행기 | 날아라 날아라 | 높이 높이 날아라 | 우리 비행기
+    notes: [
+      'E','D','C','D','E','E','E','|',
+      'D','D','D','|','E','G','G','|',
+      'E','D','C','D','E','E','E','|',
+      'E','D','D','E','D','C',
+    ],
+  },
+};
+
+// ─── 연습 모드 상태 ───
+let practiceState = {
+  active: false,
+  songId: null,
+  notes: [],
+  currentIndex: 0,
+  correctCount: 0,
+  wrongCount: 0,
+};
+
+const songSelect = document.getElementById('song-select');
+const practiceStart = document.getElementById('practice-start');
+const practiceStop = document.getElementById('practice-stop');
+const practiceScore = document.getElementById('practice-score');
+const noteDisplay = document.getElementById('note-display');
+const noteTrack = document.getElementById('note-track');
+
+songSelect.addEventListener('change', () => {
+  practiceStart.disabled = !songSelect.value;
+});
+
+practiceStart.addEventListener('click', () => {
+  if (!songSelect.value) return;
+  startPractice(songSelect.value);
+});
+
+practiceStop.addEventListener('click', () => {
+  stopPractice();
+});
+
+function startPractice(songId) {
+  const song = SONGS[songId];
+  if (!song) return;
+
+  // 연습용 음만 필터 (마디 구분자 제외)
+  const playableNotes = song.notes.filter(n => n !== '|');
+
+  practiceState = {
+    active: true,
+    songId,
+    notes: song.notes,
+    playableNotes,
+    currentIndex: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    octave: song.octave,
+  };
+
+  practiceStart.style.display = 'none';
+  practiceStop.style.display = '';
+  noteDisplay.style.display = '';
+  practiceScore.textContent = `${song.title} - 0/${playableNotes.length}`;
+
+  renderNoteTrack();
+  highlightTargetKey();
+
+  // 페이지 모드로 전환하고 해당 옥타브로 설정
+  if (isDragMode) {
+    // 드래그 모드에서 해당 옥타브로 스크롤
+    requestAnimationFrame(() => scrollToOctave(song.octave));
+  } else {
+    currentOctave = song.octave - 1 >= 1 ? song.octave - 1 : song.octave;
+    updateOctaveDisplay();
+    buildKeyboard();
+  }
+}
+
+function stopPractice() {
+  practiceState.active = false;
+  practiceStart.style.display = '';
+  practiceStop.style.display = 'none';
+  noteDisplay.style.display = 'none';
+  practiceScore.textContent = '';
+  clearKeyHighlight();
+}
+
+function renderNoteTrack() {
+  noteTrack.innerHTML = '';
+  let playableIdx = 0;
+
+  practiceState.notes.forEach(n => {
+    const el = document.createElement('div');
+
+    if (n === '|') {
+      el.className = 'note-item bar';
+    } else {
+      el.className = 'note-item';
+      el.dataset.playableIndex = playableIdx;
+
+      const kr = document.createElement('span');
+      kr.textContent = NOTE_TO_KR[n] || n;
+      el.appendChild(kr);
+
+      const name = document.createElement('span');
+      name.className = 'note-name';
+      name.textContent = n;
+      el.appendChild(name);
+
+      if (playableIdx === 0) el.classList.add('current');
+      playableIdx++;
+    }
+
+    noteTrack.appendChild(el);
+  });
+
+  scrollNoteTrack();
+}
+
+function scrollNoteTrack() {
+  const currentEl = noteTrack.querySelector('.note-item.current');
+  if (!currentEl) return;
+
+  const trackRect = noteDisplay.getBoundingClientRect();
+  const itemRect = currentEl.getBoundingClientRect();
+  const offset = itemRect.left - trackRect.left - trackRect.width / 3;
+
+  noteTrack.style.transform = `translateX(${-offset}px)`;
+}
+
+function checkNote(note) {
+  if (!practiceState.active) return;
+
+  const { playableNotes, currentIndex } = practiceState;
+  if (currentIndex >= playableNotes.length) return;
+
+  const expected = playableNotes[currentIndex];
+  const currentEl = noteTrack.querySelector(`.note-item[data-playable-index="${currentIndex}"]`);
+
+  if (note === expected) {
+    // 정답
+    practiceState.correctCount++;
+    if (currentEl) {
+      currentEl.classList.remove('current');
+      currentEl.classList.add('played');
+    }
+
+    practiceState.currentIndex++;
+    const total = playableNotes.length;
+    const song = SONGS[practiceState.songId];
+    practiceScore.textContent = `${song.title} - ${practiceState.currentIndex}/${total}`;
+
+    if (practiceState.currentIndex >= total) {
+      // 곡 완료
+      clearKeyHighlight();
+      const pct = Math.round((practiceState.correctCount / (practiceState.correctCount + practiceState.wrongCount)) * 100);
+      practiceScore.textContent = `${song.title} 완료! 정확도: ${pct}%`;
+      noteTrack.innerHTML = `<div class="practice-complete">🎉 ${song.title} 연주 완료! 정확도 ${pct}%</div>`;
+      noteTrack.style.transform = '';
+      practiceState.active = false;
+      practiceStart.style.display = '';
+      practiceStop.style.display = 'none';
+      return;
+    }
+
+    // 다음 음 표시
+    const nextEl = noteTrack.querySelector(`.note-item[data-playable-index="${practiceState.currentIndex}"]`);
+    if (nextEl) nextEl.classList.add('current');
+    scrollNoteTrack();
+    highlightTargetKey();
+  } else {
+    // 오답
+    practiceState.wrongCount++;
+    if (currentEl) {
+      currentEl.classList.add('wrong');
+      setTimeout(() => currentEl.classList.remove('wrong'), 300);
+    }
+  }
+}
+
+function highlightTargetKey() {
+  clearKeyHighlight();
+  if (!practiceState.active) return;
+
+  const { playableNotes, currentIndex, octave } = practiceState;
+  if (currentIndex >= playableNotes.length) return;
+
+  const targetNote = playableNotes[currentIndex];
+  const targetEl = keyboard.querySelector(
+    `.key[data-note="${targetNote}"][data-octave="${octave}"]`
+  );
+  if (targetEl) targetEl.classList.add('hint-glow');
+}
+
+function clearKeyHighlight() {
+  keyboard.querySelectorAll('.hint-glow').forEach(el => el.classList.remove('hint-glow'));
+}
+
 // ─── 건반 정의 ───
 const NOTES = [
   { note: 'C',  type: 'white' },
@@ -459,6 +689,9 @@ function buildKeyboard() {
   } else {
     buildPagedKeyboard();
   }
+
+  // 연습 모드 하이라이트 갱신
+  if (practiceState.active) highlightTargetKey();
 }
 
 function buildPagedKeyboard() {
@@ -572,6 +805,11 @@ function startNote(note, octave, el) {
   activeNotes.set(noteId, sound);
 
   if (el) el.classList.add('active');
+
+  // 연습 모드 판정
+  if (practiceState.active && octave === practiceState.octave) {
+    checkNote(note);
+  }
 }
 
 function stopNote(note, octave, el) {
