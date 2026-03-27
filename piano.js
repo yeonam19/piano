@@ -1,6 +1,6 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-// 피아노 음의 주파수 계산: A4 = 440Hz 기준
+// ─── 주파수 계산 ───
 function getFrequency(note, octave) {
   const noteIndex = {
     'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5,
@@ -10,44 +10,196 @@ function getFrequency(note, octave) {
   return 440 * Math.pow(2, semitones / 12);
 }
 
-// 피아노 소리 합성 (배음 + ADSR 엔벨로프)
+// ─── 악기별 음색 정의 ───
+const INSTRUMENTS = {
+  piano: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.5 },
+      { ratio: 3, gain: 0.25 },
+      { ratio: 4, gain: 0.1 },
+      { ratio: 5, gain: 0.05 },
+    ],
+    waveform: 'sine',
+    envelope: { attack: 0.01, decay: 0.1, sustain: 0.15, release: 2.0, peak: 0.4, decayLevel: 0.3 },
+  },
+  epiano: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.6 },
+      { ratio: 3, gain: 0.1 },
+      { ratio: 7, gain: 0.15 },
+      { ratio: 11, gain: 0.05 },
+    ],
+    waveform: 'sine',
+    envelope: { attack: 0.005, decay: 0.15, sustain: 0.1, release: 1.5, peak: 0.35, decayLevel: 0.2 },
+    useFM: true,
+    fmRatio: 1.5,
+    fmDepth: 80,
+  },
+  organ: {
+    harmonics: [
+      { ratio: 0.5, gain: 0.6 },
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.8 },
+      { ratio: 3, gain: 0.6 },
+      { ratio: 4, gain: 0.5 },
+      { ratio: 6, gain: 0.3 },
+      { ratio: 8, gain: 0.2 },
+    ],
+    waveform: 'sine',
+    envelope: { attack: 0.05, decay: 0.1, sustain: 0.35, release: 3.0, peak: 0.35, decayLevel: 0.35 },
+  },
+  strings: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.7 },
+      { ratio: 3, gain: 0.5 },
+      { ratio: 4, gain: 0.3 },
+      { ratio: 5, gain: 0.2 },
+    ],
+    waveform: 'sawtooth',
+    envelope: { attack: 0.3, decay: 0.2, sustain: 0.3, release: 3.0, peak: 0.2, decayLevel: 0.18 },
+  },
+  synth: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.3 },
+    ],
+    waveform: 'square',
+    envelope: { attack: 0.02, decay: 0.15, sustain: 0.2, release: 1.0, peak: 0.25, decayLevel: 0.2 },
+    useFilter: true,
+    filterFreq: 2000,
+  },
+  bell: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2.4, gain: 0.7 },
+      { ratio: 3.0, gain: 0.4 },
+      { ratio: 5.2, gain: 0.3 },
+      { ratio: 7.0, gain: 0.15 },
+    ],
+    waveform: 'sine',
+    envelope: { attack: 0.002, decay: 0.5, sustain: 0.0, release: 3.0, peak: 0.4, decayLevel: 0.05 },
+  },
+  guitar: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.5 },
+      { ratio: 3, gain: 0.35 },
+      { ratio: 4, gain: 0.15 },
+      { ratio: 5, gain: 0.08 },
+    ],
+    waveform: 'triangle',
+    envelope: { attack: 0.005, decay: 0.3, sustain: 0.05, release: 1.5, peak: 0.4, decayLevel: 0.1 },
+    useFilter: true,
+    filterFreq: 3000,
+  },
+  flute: {
+    harmonics: [
+      { ratio: 1, gain: 1.0 },
+      { ratio: 2, gain: 0.15 },
+      { ratio: 3, gain: 0.05 },
+    ],
+    waveform: 'sine',
+    envelope: { attack: 0.12, decay: 0.1, sustain: 0.25, release: 2.0, peak: 0.3, decayLevel: 0.25 },
+    useNoise: true,
+    noiseGain: 0.02,
+  },
+};
+
+let currentInstrument = 'piano';
+
+// ─── 소리 합성 ───
 function playNote(frequency) {
   const now = audioCtx.currentTime;
+  const inst = INSTRUMENTS[currentInstrument];
+  const env = inst.envelope;
 
-  const gain = audioCtx.createGain();
-  gain.connect(audioCtx.destination);
+  // 마스터 게인
+  const masterGain = audioCtx.createGain();
+  const duration = env.attack + env.decay + env.sustain + env.release;
 
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-  gain.gain.linearRampToValueAtTime(0.15, now + 0.5);
-  gain.gain.linearRampToValueAtTime(0, now + 2.0);
+  // 필터 (선택적)
+  let outputNode = masterGain;
+  if (inst.useFilter) {
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(inst.filterFreq, now);
+    filter.Q.setValueAtTime(1, now);
+    masterGain.connect(filter);
+    filter.connect(audioCtx.destination);
+    outputNode = masterGain;
+  } else {
+    masterGain.connect(audioCtx.destination);
+  }
 
-  const harmonics = [
-    { ratio: 1, gain: 1.0 },
-    { ratio: 2, gain: 0.5 },
-    { ratio: 3, gain: 0.25 },
-    { ratio: 4, gain: 0.1 },
-    { ratio: 5, gain: 0.05 },
-  ];
+  // ADSR 엔벨로프
+  masterGain.gain.setValueAtTime(0, now);
+  masterGain.gain.linearRampToValueAtTime(env.peak, now + env.attack);
+  masterGain.gain.linearRampToValueAtTime(env.decayLevel, now + env.attack + env.decay);
+  masterGain.gain.linearRampToValueAtTime(env.decayLevel * 0.8, now + env.attack + env.decay + env.sustain);
+  masterGain.gain.linearRampToValueAtTime(0, now + duration);
 
-  const oscillators = harmonics.map(h => {
+  const allOsc = [];
+
+  // FM 변조 (일렉 피아노용)
+  let fmOsc = null;
+  let fmGain = null;
+  if (inst.useFM) {
+    fmOsc = audioCtx.createOscillator();
+    fmGain = audioCtx.createGain();
+    fmOsc.frequency.setValueAtTime(frequency * inst.fmRatio, now);
+    fmGain.gain.setValueAtTime(inst.fmDepth, now);
+    fmGain.gain.linearRampToValueAtTime(inst.fmDepth * 0.3, now + duration);
+    fmOsc.connect(fmGain);
+    fmOsc.start(now);
+    fmOsc.stop(now + duration);
+    allOsc.push(fmOsc);
+  }
+
+  // 배음 오실레이터
+  inst.harmonics.forEach(h => {
     const osc = audioCtx.createOscillator();
     const hGain = audioCtx.createGain();
-    osc.type = 'sine';
+    osc.type = inst.waveform;
     osc.frequency.setValueAtTime(frequency * h.ratio, now);
     hGain.gain.setValueAtTime(h.gain, now);
+
+    if (fmGain) fmGain.connect(osc.frequency);
+
     osc.connect(hGain);
-    hGain.connect(gain);
+    hGain.connect(masterGain);
     osc.start(now);
-    osc.stop(now + 2.0);
-    return osc;
+    osc.stop(now + duration);
+    allOsc.push(osc);
   });
 
-  return { gain, oscillators };
+  // 브레스 노이즈 (플루트용)
+  let noiseSource = null;
+  if (inst.useNoise) {
+    const bufferSize = audioCtx.sampleRate * duration;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * inst.noiseGain;
+    }
+    noiseSource = audioCtx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    const noiseFilter = audioCtx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.setValueAtTime(frequency * 2, now);
+    noiseFilter.Q.setValueAtTime(2, now);
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(masterGain);
+    noiseSource.start(now);
+    noiseSource.stop(now + duration);
+  }
+
+  return { gain: masterGain, oscillators: allOsc, noiseSource };
 }
 
-// 1옥타브 음 정의
+// ─── 건반 정의 ───
 const NOTES = [
   { note: 'C',  type: 'white' },
   { note: 'C#', type: 'black' },
@@ -63,7 +215,6 @@ const NOTES = [
   { note: 'B',  type: 'white' },
 ];
 
-// 키보드 매핑
 const KB_MAP_OCT1 = { 'a':'C', 'w':'C#', 's':'D', 'e':'D#', 'd':'E', 'f':'F', 't':'F#', 'g':'G', 'y':'G#', 'h':'A', 'u':'A#', 'j':'B' };
 const KB_MAP_OCT2 = { 'k':'C', 'o':'C#', 'l':'D', 'p':'D#', ';':'E', "'":"F" };
 
@@ -73,8 +224,8 @@ const activeNotes = new Map();
 const viewport = document.getElementById('keyboard-viewport');
 const keyboard = document.getElementById('keyboard');
 const modeToggle = document.getElementById('mode-toggle');
+const instrumentSelect = document.getElementById('instrument-select');
 
-// ─── 드래그 스크롤 상태 ───
 let dragState = {
   isDragging: false,
   startX: 0,
@@ -84,7 +235,12 @@ let dragState = {
   touchStartY: 0,
 };
 
-const DRAG_THRESHOLD = 8; // 이 픽셀 이상 이동하면 드래그로 판정
+const DRAG_THRESHOLD = 8;
+
+// ─── 악기 변경 ───
+instrumentSelect.addEventListener('change', () => {
+  currentInstrument = instrumentSelect.value;
+});
 
 // ─── 건반 생성 ───
 function getKbHint(note, octaveOffset) {
@@ -118,14 +274,12 @@ function buildPagedKeyboard() {
 }
 
 function buildFullKeyboard() {
-  // 옥타브 1~7 전체 건반 생성
   for (let octave = 1; octave <= 7; octave++) {
     NOTES.forEach(key => {
       keyboard.appendChild(createKeyElement(key, octave, null));
     });
   }
 
-  // C4 위치로 초기 스크롤
   requestAnimationFrame(() => {
     scrollToOctave(4);
   });
@@ -151,13 +305,11 @@ function createKeyElement(key, octave, kbHint) {
     el.style.gap = '2px';
   }
 
-  // 마우스: 드래그 모드에서는 mousedown에서 바로 재생하지 않음
   el.addEventListener('mousedown', (e) => {
     e.preventDefault();
     if (!isDragMode) {
       startNote(key.note, octave, el);
     }
-    // 드래그 모드에서는 mouseup 시 드래그가 아니었으면 재생
   });
   el.addEventListener('mouseup', () => {
     if (isDragMode && dragState.movedDistance < DRAG_THRESHOLD) {
@@ -171,10 +323,8 @@ function createKeyElement(key, octave, kbHint) {
     if (!isDragMode) stopNote(key.note, octave, el);
   });
 
-  // 터치
   el.addEventListener('touchstart', (e) => {
     if (isDragMode) {
-      // 드래그 모드: 터치 시작 위치 기록, 네이티브 스크롤 허용
       dragState.touchStartX = e.touches[0].pageX;
       dragState.touchStartY = e.touches[0].pageY;
     } else {
@@ -184,7 +334,6 @@ function createKeyElement(key, octave, kbHint) {
   }, { passive: false });
   el.addEventListener('touchend', (e) => {
     if (isDragMode) {
-      // 터치 이동 거리가 작으면 탭으로 판정 → 소리 재생
       const touch = e.changedTouches[0];
       const dx = Math.abs(touch.pageX - dragState.touchStartX);
       const dy = Math.abs(touch.pageY - dragState.touchStartY);
@@ -205,11 +354,7 @@ function createKeyElement(key, octave, kbHint) {
 function scrollToOctave(octave) {
   const targetKey = keyboard.querySelector(`[data-note="C"][data-octave="${octave}"]`);
   if (!targetKey) return;
-
-  const viewportWidth = viewport.clientWidth;
-  const keyLeft = targetKey.offsetLeft;
-  // 타겟 건반을 뷰포트 중앙 근처에 배치
-  const scrollPos = keyLeft - viewportWidth / 2 + 100;
+  const scrollPos = targetKey.offsetLeft - viewport.clientWidth / 2 + 100;
   viewport.scrollLeft = Math.max(0, scrollPos);
 }
 
@@ -236,12 +381,15 @@ function stopNote(note, octave, el) {
     sound.gain.gain.setValueAtTime(sound.gain.gain.value, now);
     sound.gain.gain.linearRampToValueAtTime(0, now + 0.3);
     sound.oscillators.forEach(osc => osc.stop(now + 0.3));
+    if (sound.noiseSource) {
+      try { sound.noiseSource.stop(now + 0.3); } catch (e) {}
+    }
     activeNotes.delete(noteId);
   }
   if (el) el.classList.remove('active');
 }
 
-// ─── 드래그 스크롤 (뷰포트 레벨) ───
+// ─── 드래그 스크롤 ───
 viewport.addEventListener('mousedown', (e) => {
   if (!isDragMode) return;
   dragState.isDragging = true;
@@ -265,8 +413,6 @@ document.addEventListener('mouseup', () => {
   }
 });
 
-// 터치 드래그: 네이티브 스크롤에 위임 (touch-action: pan-x)
-
 // ─── 모드 전환 ───
 modeToggle.addEventListener('click', () => {
   isDragMode = !isDragMode;
@@ -274,7 +420,6 @@ modeToggle.addEventListener('click', () => {
   modeToggle.textContent = isDragMode ? '🎹 페이지 모드' : '🔀 드래그 모드';
   viewport.classList.toggle('drag-mode', isDragMode);
 
-  // 옥타브 버튼 숨김/표시
   document.getElementById('octave-down').style.display = isDragMode ? 'none' : '';
   document.getElementById('octave-up').style.display = isDragMode ? 'none' : '';
   document.getElementById('octave-display').style.display = isDragMode ? 'none' : '';
@@ -286,7 +431,6 @@ modeToggle.addEventListener('click', () => {
 function resolveKey(kbKey) {
   const k = kbKey.toLowerCase();
   if (isDragMode) {
-    // 드래그 모드에서는 화면 중앙 근처의 옥타브 기준
     const centerOctave = getCenterOctave();
     if (KB_MAP_OCT1[k]) return { note: KB_MAP_OCT1[k], octave: centerOctave };
     if (KB_MAP_OCT2[k]) return { note: KB_MAP_OCT2[k], octave: centerOctave + 1 };
@@ -329,7 +473,7 @@ document.addEventListener('keyup', (e) => {
   stopNote(resolved.note, resolved.octave, el);
 });
 
-// ─── 옥타브 조절 (페이지 모드) ───
+// ─── 옥타브 조절 ───
 document.getElementById('octave-down').addEventListener('click', () => {
   if (currentOctave > 1) {
     currentOctave--;

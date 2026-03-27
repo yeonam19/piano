@@ -9,10 +9,22 @@
 <body>
   <div id="piano">
     <div class="controls">
-      <button id="octave-down">◀ 옥타브</button>
-      <span id="octave-display">옥타브: 3–4</span>
-      <button id="octave-up">옥타브 ▶</button>
-      <span class="controls-divider"></span>
+      <div class="controls-left">
+        <select id="instrument-select">
+          <option value="piano">🎹 피아노</option>
+          <option value="epiano">🎹 일렉 피아노</option>
+          <option value="organ">🎵 오르간</option>
+          <option value="strings">🎻 현악기</option>
+          <option value="synth">🎛️ 신스</option>
+          <option value="bell">🔔 벨</option>
+          <option value="guitar">🎸 기타</option>
+          <option value="flute">🪈 플루트</option>
+        </select>
+        <span class="controls-divider"></span>
+        <button id="octave-down">◀ 옥타브</button>
+        <span id="octave-display">옥타브: 3–4</span>
+        <button id="octave-up">옥타브 ▶</button>
+      </div>
       <button id="mode-toggle">🔀 드래그 모드</button>
     </div>
     <div id="keyboard-viewport">
