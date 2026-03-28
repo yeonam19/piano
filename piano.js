@@ -389,7 +389,10 @@ function playNote(frequency) {
 }
 
 // ─── 동요 데이터 ───
-const NOTE_TO_KR = { 'C': '도', 'D': '레', 'E': '미', 'F': '파', 'G': '솔', 'A': '라', 'B': '시' };
+const NOTE_TO_KR = {
+  'C': '도', 'C#': '도#', 'D': '레', 'D#': '레#', 'E': '미',
+  'F': '파', 'F#': '파#', 'G': '솔', 'G#': '솔#', 'A': '라', 'A#': '라#', 'B': '시',
+};
 const DUR_SYMBOL = { 1: '𝅝', 2: '𝅗𝅥', 4: '♩', 8: '♪' };
 
 // 간편 표기 파서: "G4 G4 A2 |" → [{n:'G',d:4}, {n:'G',d:4}, {n:'A',d:2}, '|']
@@ -528,6 +531,17 @@ const SONGS = {
       'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2 | ' +
       'A2 A4 G8 A8 G4 E4 | D4 E4 G4 A4 G4 E4 | ' +
       'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2'
+    ),
+  },
+  'conan': {
+    title: '명탐정 코난 메인테마',
+    octave: 4,
+    // Detective Conan Main Theme 도입부
+    notes: parseSong(
+      'E4 F#4 G#4 A4 G#4 F#4 E2 | E4 F#4 G#4 A4 B2 | ' +
+      'E4 F#4 G#4 A4 G#4 F#4 E2 | D#4 E4 F#4 E4 D#2 | ' +
+      'E4 F#4 G#4 A4 G#4 F#4 E2 | E4 F#4 G#4 A4 B2 | ' +
+      'B4 A4 G#4 A4 B4 A4 G#2 | F#4 G#4 A4 G#4 F#4 E2'
     ),
   },
   'chopsticks': {
