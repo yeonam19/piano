@@ -536,12 +536,16 @@ const SONGS = {
   'conan': {
     title: '명탐정 코난 메인테마',
     octave: 4,
-    // Detective Conan Main Theme 도입부
+    // 도시라-미--도라시-파-미레-도레도레미-도시라-레-도시-라도-라-파-도-레-라-솔-파-미---
+    // 미도-라-솔#라도시라-솔--라-도레-도레미---레미파-미레--레미파솔라-솔파솔라-시---
+    // 도시라-미--도라시-파-미레-도레도레미미파#솔#라-도-시솔#-라----
     notes: parseSong(
-      'E4 F#4 G#4 A4 G#4 F#4 E2 | E4 F#4 G#4 A4 B2 | ' +
-      'E4 F#4 G#4 A4 G#4 F#4 E2 | D#4 E4 F#4 E4 D#2 | ' +
-      'E4 F#4 G#4 A4 G#4 F#4 E2 | E4 F#4 G#4 A4 B2 | ' +
-      'B4 A4 G#4 A4 B4 A4 G#2 | F#4 G#4 A4 G#4 F#4 E2'
+      'C4 B8 A4 A4 E2 | C4 A8 B4 B4 F4 | E4 D4 D8 C8 D8 C8 D8 E4 | ' +
+      'C4 B8 A4 A4 D4 | C4 B4 B8 A4 C4 | A4 A4 F4 | C4 D4 | A4 G4 F4 E2 | ' +
+      'E4 C4 A4 A8 G#8 A4 C4 B4 A4 | G2 A4 | C4 D4 C8 D8 E2 | ' +
+      'D4 E4 F4 E4 D4 | D8 E8 F8 G8 A4 G4 F4 G4 A4 | B2 | ' +
+      'C4 B8 A4 A4 E2 | C4 A8 B4 B4 F4 | E4 D4 D8 C8 D8 C8 D8 E4 | ' +
+      'E4 F#4 G#4 A4 | C4 B4 G#4 A2'
     ),
   },
   'chopsticks': {
