@@ -749,6 +749,16 @@ instrumentSelect.addEventListener('change', () => {
   buildKeyboard();
 });
 
+// ─── 테마 변경 ───
+const themeSelect = document.getElementById('theme-select');
+themeSelect.addEventListener('change', () => {
+  // keyboard 요소에서 기존 테마 클래스 제거 후 새 테마 적용
+  keyboard.className = keyboard.className.replace(/theme-\S+/g, '').trim();
+  if (themeSelect.value !== 'classic') {
+    keyboard.classList.add('theme-' + themeSelect.value);
+  }
+});
+
 // ─── 멀티터치 추적 ───
 const activeTouches = new Map(); // touchId → noteId
 
@@ -760,7 +770,10 @@ function getKeyAtPoint(x, y) {
 
 // ─── 건반 생성 ───
 function buildKeyboard() {
+  // 테마 클래스 보존
+  const themeClass = [...keyboard.classList].find(c => c.startsWith('theme-')) || '';
   keyboard.innerHTML = '';
+  keyboard.className = themeClass;
 
   for (let octave = 1; octave <= 7; octave++) {
     NOTES.forEach(key => {

@@ -252,6 +252,156 @@ body {
   transform: scaleY(0.98);
 }
 
+/* ═══════════════════════════════════════
+   테마: 무지개
+   ═══════════════════════════════════════ */
+.theme-rainbow .key.white { border-color: rgba(0,0,0,0.15); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.theme-rainbow .key.black { background: linear-gradient(to bottom, #444, #222); border-color: #333; }
+.theme-rainbow .key.white:nth-child(12n+1)  { background: linear-gradient(to bottom, #ff6b6b, #ee5a5a); } /* C */
+.theme-rainbow .key.white:nth-child(12n+3)  { background: linear-gradient(to bottom, #ffa64d, #ee8833); } /* D */
+.theme-rainbow .key.white:nth-child(12n+5)  { background: linear-gradient(to bottom, #ffd93d, #eec82a); } /* E */
+.theme-rainbow .key.white:nth-child(12n+6)  { background: linear-gradient(to bottom, #6bcb77, #5ab866); } /* F */
+.theme-rainbow .key.white:nth-child(12n+8)  { background: linear-gradient(to bottom, #4d96ff, #3a80ee); } /* G */
+.theme-rainbow .key.white:nth-child(12n+10) { background: linear-gradient(to bottom, #6b5bff, #5a4aee); } /* A */
+.theme-rainbow .key.white:nth-child(12n)    { background: linear-gradient(to bottom, #d45bff, #c44aee); } /* B */
+.theme-rainbow .key.white.active { filter: brightness(0.85); }
+.theme-rainbow .key.black.active { filter: brightness(1.5); }
+
+/* ═══════════════════════════════════════
+   테마: 별의커비
+   ═══════════════════════════════════════ */
+.theme-kirby .key.white {
+  background: linear-gradient(to bottom, #ffb6d9, #ff99cc);
+  border-color: #ff80bf;
+  color: #cc3388;
+}
+.theme-kirby .key.black {
+  background: linear-gradient(to bottom, #ff6699, #e84580);
+  border-color: #cc3366;
+  color: #ffccdd;
+}
+.theme-kirby .key.white:hover { background: linear-gradient(to bottom, #ffa0cc, #ff88bb); }
+.theme-kirby .key.white.active { background: linear-gradient(to bottom, #ff88bb, #ff77aa); }
+.theme-kirby .key.black.active { background: linear-gradient(to bottom, #ff88aa, #ff6699); }
+
+/* ═══════════════════════════════════════
+   테마: 초콜릿
+   ═══════════════════════════════════════ */
+.theme-chocolate .key.white {
+  background: linear-gradient(to bottom, #d4a574, #c4956a);
+  border-color: #a07050;
+  color: #5c3520;
+}
+.theme-chocolate .key.black {
+  background: linear-gradient(to bottom, #4a2c17, #2e1a0e);
+  border-color: #1a0f08;
+  color: #8b6040;
+}
+.theme-chocolate .key.white:hover { background: linear-gradient(to bottom, #c49568, #b48860); }
+.theme-chocolate .key.white.active { background: linear-gradient(to bottom, #b08058, #a07050); }
+.theme-chocolate .key.black.active { background: linear-gradient(to bottom, #6a4c30, #4a2c17); }
+
+/* ═══════════════════════════════════════
+   테마: 바나나
+   ═══════════════════════════════════════ */
+.theme-banana .key.white {
+  background: linear-gradient(to bottom, #fff176, #ffee58);
+  border-color: #e6d44a;
+  color: #8d7600;
+}
+.theme-banana .key.black {
+  background: linear-gradient(to bottom, #8d7600, #6b5900);
+  border-color: #4a3d00;
+  color: #c8b400;
+}
+.theme-banana .key.white:hover { background: linear-gradient(to bottom, #ffed4a, #ffe030); }
+.theme-banana .key.white.active { background: linear-gradient(to bottom, #ffe030, #ffd600); }
+.theme-banana .key.black.active { background: linear-gradient(to bottom, #a89000, #8d7600); }
+
+/* ═══════════════════════════════════════
+   테마: 우주
+   ═══════════════════════════════════════ */
+.theme-space .key.white {
+  background: linear-gradient(to bottom, #2d1b69, #1a0f40);
+  border-color: #3d2b80;
+  color: #b8a0ff;
+}
+.theme-space .key.black {
+  background: linear-gradient(to bottom, #0d0620, #050210);
+  border-color: #1a0f40;
+  color: #6040a0;
+}
+.theme-space .key.white:hover { background: linear-gradient(to bottom, #3d2b80, #2d1b69); }
+.theme-space .key.white.active {
+  background: linear-gradient(to bottom, #5040a0, #3d2b80);
+  box-shadow: 0 0 15px rgba(150, 120, 255, 0.5);
+}
+.theme-space .key.black.active {
+  background: linear-gradient(to bottom, #2d1b69, #1a0f40);
+  box-shadow: 0 0 10px rgba(150, 120, 255, 0.4);
+}
+
+/* ═══════════════════════════════════════
+   테마: 바다
+   ═══════════════════════════════════════ */
+.theme-ocean .key.white {
+  background: linear-gradient(to bottom, #80deea, #4dd0e1);
+  border-color: #26c6da;
+  color: #00606e;
+}
+.theme-ocean .key.black {
+  background: linear-gradient(to bottom, #00606e, #004050);
+  border-color: #003040;
+  color: #40a0b0;
+}
+.theme-ocean .key.white:hover { background: linear-gradient(to bottom, #60d0e0, #40c4d4); }
+.theme-ocean .key.white.active { background: linear-gradient(to bottom, #40c4d4, #26c6da); }
+.theme-ocean .key.black.active { background: linear-gradient(to bottom, #00808e, #00606e); }
+
+/* ═══════════════════════════════════════
+   테마: 벚꽃
+   ═══════════════════════════════════════ */
+.theme-sakura .key.white {
+  background: linear-gradient(to bottom, #fce4ec, #f8bbd0);
+  border-color: #f48fb1;
+  color: #ad1457;
+}
+.theme-sakura .key.black {
+  background: linear-gradient(to bottom, #ad1457, #880e4f);
+  border-color: #6a0040;
+  color: #f48fb1;
+}
+.theme-sakura .key.white:hover { background: linear-gradient(to bottom, #f8bbd0, #f48fb1); }
+.theme-sakura .key.white.active { background: linear-gradient(to bottom, #f48fb1, #ec407a); }
+.theme-sakura .key.black.active { background: linear-gradient(to bottom, #c2185b, #ad1457); }
+
+/* ═══════════════════════════════════════
+   테마: 네온
+   ═══════════════════════════════════════ */
+.theme-neon .key.white {
+  background: linear-gradient(to bottom, #1a1a2e, #16213e);
+  border: 1px solid #0ff;
+  color: #0ff;
+  box-shadow: inset 0 -30px 30px -20px rgba(0, 255, 255, 0.08);
+}
+.theme-neon .key.black {
+  background: linear-gradient(to bottom, #0a0a15, #050510);
+  border: 1px solid #f0f;
+  color: #f0f;
+  box-shadow: inset 0 -20px 20px -15px rgba(255, 0, 255, 0.1);
+}
+.theme-neon .key.white:hover {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 -30px 30px -20px rgba(0, 255, 255, 0.15);
+}
+.theme-neon .key.white.active {
+  background: linear-gradient(to bottom, #0a2a2e, #0a2030);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+.theme-neon .key.black.active {
+  background: linear-gradient(to bottom, #1a0a20, #100515);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+}
+
 /* ─── 네비게이션 미니맵 ─── */
 #nav-bar {
   width: 100%;
