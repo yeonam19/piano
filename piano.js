@@ -576,16 +576,32 @@ const practiceScore = document.getElementById('practice-score');
 const noteDisplay = document.getElementById('note-display');
 const noteTrack = document.getElementById('note-track');
 
+const autoplayBtn = document.getElementById('autoplay-btn');
+let autoplayState = { playing: false, timer: null, index: 0 };
+
 songSelect.addEventListener('change', () => {
-  practiceStart.disabled = !songSelect.value;
+  const hasVal = !!songSelect.value;
+  practiceStart.disabled = !hasVal;
+  autoplayBtn.disabled = !hasVal;
 });
 
 practiceStart.addEventListener('click', () => {
   if (!songSelect.value) return;
+  stopAutoplay();
   startPractice(songSelect.value);
 });
 
+autoplayBtn.addEventListener('click', () => {
+  if (!songSelect.value) return;
+  if (autoplayState.playing) {
+    stopAutoplay();
+  } else {
+    startAutoplay(songSelect.value);
+  }
+});
+
 practiceStop.addEventListener('click', () => {
+  stopAutoplay();
   stopPractice();
 });
 
@@ -608,6 +624,7 @@ function startPractice(songId) {
   };
 
   practiceStart.style.display = 'none';
+  autoplayBtn.style.display = 'none';
   practiceStop.style.display = '';
   noteDisplay.style.display = '';
   practiceScore.textContent = `${song.title} - 0/${playableNotes.length}`;
@@ -622,10 +639,111 @@ function startPractice(songId) {
 function stopPractice() {
   practiceState.active = false;
   practiceStart.style.display = '';
+  autoplayBtn.style.display = '';
   practiceStop.style.display = 'none';
   noteDisplay.style.display = 'none';
   practiceScore.textContent = '';
   clearKeyHighlight();
+}
+
+// ─── 자동 연주 ───
+function durToMs(d, bpm) {
+  // d: 1=whole, 2=half, 4=quarter, 8=eighth
+  const beatMs = 60000 / bpm;
+  return (4 / d) * beatMs;
+}
+
+function startAutoplay(songId) {
+  const song = SONGS[songId];
+  if (!song) return;
+
+  const playableNotes = song.notes.filter(n => n !== '|');
+
+  // UI 설정
+  practiceState = {
+    active: false, // 연습 판정 비활성
+    songId,
+    notes: song.notes,
+    playableNotes,
+    currentIndex: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    octave: song.octave,
+  };
+
+  practiceStart.style.display = 'none';
+  autoplayBtn.textContent = '⏸ 일시정지';
+  practiceStop.style.display = '';
+  noteDisplay.style.display = '';
+  practiceScore.textContent = `${song.title} - 자동연주`;
+
+  renderNoteTrack();
+  requestAnimationFrame(() => scrollToOctave(song.octave));
+
+  autoplayState = { playing: true, timer: null, index: 0 };
+  playNextAutoNote(playableNotes, song.octave, 120);
+}
+
+function playNextAutoNote(notes, octave, bpm) {
+  if (!autoplayState.playing) return;
+  if (autoplayState.index >= notes.length) {
+    // 곡 완료
+    practiceScore.textContent = `${SONGS[practiceState.songId].title} - 자동연주 완료`;
+    stopAutoplay();
+    return;
+  }
+
+  const noteObj = notes[autoplayState.index];
+  const note = noteObj.n;
+  const dur = noteObj.d;
+  const holdMs = durToMs(dur, bpm) * 0.85; // 음 지속 시간
+  const totalMs = durToMs(dur, bpm);        // 다음 음까지 간격
+
+  // 건반 찾기 & 재생
+  const el = keyboard.querySelector(`.key[data-note="${note}"][data-octave="${octave}"]`);
+  startNote(note, octave, el);
+
+  // 노트 트랙 업데이트
+  const prevEl = noteTrack.querySelector(`.note-item[data-playable-index="${autoplayState.index - 1}"]`);
+  if (prevEl) { prevEl.classList.remove('current'); prevEl.classList.add('played'); }
+  const curEl = noteTrack.querySelector(`.note-item[data-playable-index="${autoplayState.index}"]`);
+  if (curEl) curEl.classList.add('current');
+  scrollNoteTrack();
+
+  // 건반 하이라이트
+  clearKeyHighlight();
+  if (el) el.classList.add('hint-glow');
+
+  // 음 릴리즈
+  setTimeout(() => {
+    stopNote(note, octave, el);
+  }, holdMs);
+
+  autoplayState.index++;
+
+  // 다음 음 예약
+  autoplayState.timer = setTimeout(() => {
+    playNextAutoNote(notes, octave, bpm);
+  }, totalMs);
+}
+
+function stopAutoplay() {
+  autoplayState.playing = false;
+  if (autoplayState.timer) {
+    clearTimeout(autoplayState.timer);
+    autoplayState.timer = null;
+  }
+  autoplayBtn.textContent = '🔊 자동연주';
+  autoplayBtn.style.display = '';
+  clearKeyHighlight();
+
+  // 울리고 있는 노트 모두 정지
+  activeNotes.forEach((sound, noteId) => {
+    const pn = noteId.replace(/\d+$/, '');
+    const po = parseInt(noteId.match(/\d+$/)[0]);
+    const el = keyboard.querySelector(`.key[data-note="${pn}"][data-octave="${po}"]`);
+    stopNote(pn, po, el);
+  });
 }
 
 function renderNoteTrack() {
