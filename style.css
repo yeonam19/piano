@@ -175,12 +175,27 @@ body {
 }
 
 .key.hint-glow {
-  box-shadow: 0 0 12px 4px rgba(74, 144, 217, 0.6);
-  z-index: 10;
+  z-index: 10 !important;
+  box-shadow: 0 0 20px 8px rgba(255, 220, 50, 0.7), inset 0 0 15px rgba(255, 220, 50, 0.25) !important;
+  animation: hint-pulse 0.8s ease-in-out infinite alternate;
 }
 
-.key.white.hint-glow { background: linear-gradient(to bottom, #d0e4ff, #e8f0ff); }
-.key.black.hint-glow { background: linear-gradient(to bottom, #3a5a8a, #2a4060); }
+.key.white.hint-glow {
+  background: linear-gradient(to bottom, #fff8c4, #ffec6a) !important;
+  border-color: #e6c200 !important;
+  color: #8a6d00 !important;
+}
+
+.key.black.hint-glow {
+  background: linear-gradient(to bottom, #e6b800, #c89e00) !important;
+  border-color: #a08000 !important;
+  color: #fff !important;
+}
+
+@keyframes hint-pulse {
+  from { box-shadow: 0 0 16px 6px rgba(255, 220, 50, 0.5), inset 0 0 12px rgba(255, 220, 50, 0.15); }
+  to   { box-shadow: 0 0 28px 12px rgba(255, 220, 50, 0.8), inset 0 0 20px rgba(255, 220, 50, 0.3); }
+}
 
 /* ─── 뷰포트 & 건반 ─── */
 #keyboard-viewport {

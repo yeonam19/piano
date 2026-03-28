@@ -528,6 +528,19 @@ const SONGS = {
       'E4 E4 A4 A2 G8 A8 | G4 E4 D4 E2'
     ),
   },
+  'chopsticks': {
+    title: '젓가락 행진곡',
+    octave: 4,
+    notes: parseSong(
+      'F8 G8 F8 G8 F8 G8 F8 G8 | F8 G8 F8 G8 F4 F4 | ' +
+      'E8 G8 E8 G8 E8 G8 E8 G8 | E8 G8 E8 G8 E4 E4 | ' +
+      'D8 F8 D8 F8 D8 F8 D8 F8 | D8 F8 D8 F8 D4 D4 | ' +
+      'C8 E8 C8 E8 C8 E8 C8 E8 | C8 E8 C8 E8 C4 C4 | ' +
+      'F8 G8 F8 G8 F8 G8 F8 G8 | F8 G8 F8 G8 F4 F4 | ' +
+      'E8 G8 E8 G8 E8 G8 E8 G8 | E8 G8 E8 G8 E4 E4 | ' +
+      'D8 F8 D8 B8 D8 F8 D8 B8 | C4 E4 G4 C4 C2'
+    ),
+  },
 };
 
 // ─── 연습 모드 상태 ───
