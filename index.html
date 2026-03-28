@@ -21,12 +21,7 @@
           <option value="flute">🪈 플루트</option>
           <option value="drum">🥁 드럼</option>
         </select>
-        <span class="controls-divider"></span>
-        <button id="octave-down">◀ 옥타브</button>
-        <span id="octave-display">옥타브: 3–4</span>
-        <button id="octave-up">옥타브 ▶</button>
       </div>
-      <button id="mode-toggle">🔀 드래그 모드</button>
     </div>
 
     <!-- 연습 모드 -->
@@ -60,7 +55,16 @@
     <div id="keyboard-viewport">
       <div id="keyboard"></div>
     </div>
-    <div class="key-hint">키보드: A~J (1번째 옥타브) / K L ; ' (2번째 옥타브) / Z X (옥타브 이동)</div>
+
+    <!-- 네비게이션 미니맵 -->
+    <div id="nav-bar">
+      <div id="nav-track">
+        <div id="nav-window"></div>
+      </div>
+      <div id="nav-labels"></div>
+    </div>
+
+    <div class="key-hint">키보드: A~J / W E T Y U (건반) · Z X (옥타브 이동)</div>
   </div>
   <script src="piano.js"></script>
 </body>

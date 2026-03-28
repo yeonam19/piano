@@ -586,15 +586,8 @@ function startPractice(songId) {
   renderNoteTrack();
   highlightTargetKey();
 
-  // 페이지 모드로 전환하고 해당 옥타브로 설정
-  if (isDragMode) {
-    // 드래그 모드에서 해당 옥타브로 스크롤
-    requestAnimationFrame(() => scrollToOctave(song.octave));
-  } else {
-    currentOctave = song.octave - 1 >= 1 ? song.octave - 1 : song.octave;
-    updateOctaveDisplay();
-    buildKeyboard();
-  }
+  // 해당 옥타브로 스크롤
+  requestAnimationFrame(() => scrollToOctave(song.octave));
 }
 
 function stopPractice() {
@@ -739,153 +732,61 @@ const NOTES = [
 const KB_MAP_OCT1 = { 'a':'C', 'w':'C#', 's':'D', 'e':'D#', 'd':'E', 'f':'F', 't':'F#', 'g':'G', 'y':'G#', 'h':'A', 'u':'A#', 'j':'B' };
 const KB_MAP_OCT2 = { 'k':'C', 'o':'C#', 'l':'D', 'p':'D#', ';':'E', "'":"F" };
 
-let currentOctave = 3;
-let isDragMode = true;
+let currentOctave = 4;
 const activeNotes = new Map();
 const viewport = document.getElementById('keyboard-viewport');
 const keyboard = document.getElementById('keyboard');
-const modeToggle = document.getElementById('mode-toggle');
 const instrumentSelect = document.getElementById('instrument-select');
 
-let dragState = {
-  isDragging: false,
-  startX: 0,
-  scrollLeft: 0,
-  movedDistance: 0,
-  touchStartX: 0,
-  touchStartY: 0,
-};
-
-const DRAG_THRESHOLD = 8;
-
-// 드럼 라벨 (짧은 한글)
 const DRUM_LABELS = {
   'C': 'Kick', 'C#': 'Rim', 'D': 'Snare', 'D#': 'Clap',
   'E': 'HH', 'F': 'OH', 'F#': 'LTom', 'G': 'MTom',
   'G#': 'HTom', 'A': 'Crash', 'A#': 'Ride', 'B': 'Bell',
 };
 
-// ─── 악기 변경 ───
 instrumentSelect.addEventListener('change', () => {
   currentInstrument = instrumentSelect.value;
   buildKeyboard();
 });
 
-// ─── 건반 생성 ───
-function getKbHint(note, octaveOffset) {
-  if (octaveOffset === 0) {
-    return Object.entries(KB_MAP_OCT1).find(([, n]) => n === note)?.[0]?.toUpperCase();
-  }
-  if (octaveOffset === 1) {
-    return Object.entries(KB_MAP_OCT2).find(([, n]) => n === note)?.[0]?.toUpperCase();
-  }
-  return null;
+// ─── 멀티터치 추적 ───
+const activeTouches = new Map(); // touchId → noteId
+
+function getKeyAtPoint(x, y) {
+  // 검은 건반이 z-index가 높으므로 elementsFromPoint로 최상위 키 찾기
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.classList.contains('key')) || null;
 }
 
+// ─── 건반 생성 ───
 function buildKeyboard() {
   keyboard.innerHTML = '';
-  keyboard.style.transform = '';
 
-  if (isDragMode) {
-    buildFullKeyboard();
-  } else {
-    buildPagedKeyboard();
-  }
-
-  // 연습 모드 하이라이트 갱신
-  if (practiceState.active) highlightTargetKey();
-}
-
-function buildPagedKeyboard() {
-  for (let oct = 0; oct < 2; oct++) {
-    const octave = currentOctave + oct;
-    NOTES.forEach(key => {
-      keyboard.appendChild(createKeyElement(key, octave, getKbHint(key.note, oct)));
-    });
-  }
-}
-
-function buildFullKeyboard() {
   for (let octave = 1; octave <= 7; octave++) {
     NOTES.forEach(key => {
-      keyboard.appendChild(createKeyElement(key, octave, null));
+      const el = document.createElement('div');
+      el.className = `key ${key.type}`;
+      el.dataset.note = key.note;
+      el.dataset.octave = octave;
+
+      const label = document.createElement('span');
+      if (currentInstrument === 'drum') {
+        label.textContent = DRUM_LABELS[key.note] || key.note;
+        label.style.fontSize = '10px';
+      } else {
+        label.textContent = key.type === 'white' ? `${key.note}${octave}` : key.note;
+      }
+      el.appendChild(label);
+
+      keyboard.appendChild(el);
     });
   }
 
+  if (practiceState.active) highlightTargetKey();
   requestAnimationFrame(() => {
-    scrollToOctave(4);
+    scrollToOctave(currentOctave);
+    updateNavWindow();
   });
-}
-
-function createKeyElement(key, octave, kbHint) {
-  const el = document.createElement('div');
-  el.className = `key ${key.type}`;
-  el.dataset.note = key.note;
-  el.dataset.octave = octave;
-
-  const label = document.createElement('span');
-  if (currentInstrument === 'drum') {
-    label.textContent = DRUM_LABELS[key.note] || key.note;
-    label.style.fontSize = '10px';
-  } else {
-    label.textContent = key.type === 'white' ? `${key.note}${octave}` : key.note;
-  }
-  el.appendChild(label);
-
-  if (kbHint) {
-    const hint = document.createElement('span');
-    hint.textContent = kbHint;
-    hint.style.fontSize = '10px';
-    hint.style.opacity = '0.5';
-    hint.style.marginTop = '4px';
-    el.appendChild(hint);
-    el.style.gap = '2px';
-  }
-
-  el.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    if (!isDragMode) {
-      startNote(key.note, octave, el);
-    }
-  });
-  el.addEventListener('mouseup', () => {
-    if (isDragMode && dragState.movedDistance < DRAG_THRESHOLD) {
-      startNote(key.note, octave, el);
-      setTimeout(() => stopNote(key.note, octave, el), 200);
-    } else {
-      stopNote(key.note, octave, el);
-    }
-  });
-  el.addEventListener('mouseleave', () => {
-    if (!isDragMode) stopNote(key.note, octave, el);
-  });
-
-  el.addEventListener('touchstart', (e) => {
-    if (isDragMode) {
-      dragState.touchStartX = e.touches[0].pageX;
-      dragState.touchStartY = e.touches[0].pageY;
-    } else {
-      e.preventDefault();
-      startNote(key.note, octave, el);
-    }
-  }, { passive: false });
-  el.addEventListener('touchend', (e) => {
-    if (isDragMode) {
-      const touch = e.changedTouches[0];
-      const dx = Math.abs(touch.pageX - dragState.touchStartX);
-      const dy = Math.abs(touch.pageY - dragState.touchStartY);
-      if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
-        e.preventDefault();
-        startNote(key.note, octave, el);
-        setTimeout(() => stopNote(key.note, octave, el), 200);
-      }
-    } else {
-      e.preventDefault();
-      stopNote(key.note, octave, el);
-    }
-  }, { passive: false });
-
-  return el;
 }
 
 function scrollToOctave(octave) {
@@ -894,6 +795,120 @@ function scrollToOctave(octave) {
   const scrollPos = targetKey.offsetLeft - viewport.clientWidth / 2 + 100;
   viewport.scrollLeft = Math.max(0, scrollPos);
 }
+
+// ─── 마우스 이벤트 (글리산도 + 동시 누르기) ───
+let mouseDown = false;
+let mouseNoteId = null;
+
+keyboard.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  mouseDown = true;
+  const el = getKeyAtPoint(e.clientX, e.clientY);
+  if (el) {
+    const note = el.dataset.note;
+    const octave = parseInt(el.dataset.octave);
+    mouseNoteId = `${note}${octave}`;
+    startNote(note, octave, el);
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!mouseDown) return;
+  const el = getKeyAtPoint(e.clientX, e.clientY);
+  if (!el) return;
+
+  const note = el.dataset.note;
+  const octave = parseInt(el.dataset.octave);
+  const newId = `${note}${octave}`;
+
+  if (newId !== mouseNoteId) {
+    // 이전 건반 릴리즈, 새 건반 프레스 (글리산도)
+    if (mouseNoteId) {
+      const prevEl = keyboard.querySelector(`.key[data-note="${mouseNoteId.replace(/\d+$/, '')}"][data-octave="${mouseNoteId.match(/\d+$/)[0]}"]`);
+      const [pn, po] = [mouseNoteId.replace(/\d+$/, ''), parseInt(mouseNoteId.match(/\d+$/)[0])];
+      stopNote(pn, po, prevEl);
+    }
+    mouseNoteId = newId;
+    startNote(note, octave, el);
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (!mouseDown) return;
+  mouseDown = false;
+  if (mouseNoteId) {
+    const pn = mouseNoteId.replace(/\d+$/, '');
+    const po = parseInt(mouseNoteId.match(/\d+$/)[0]);
+    const prevEl = keyboard.querySelector(`.key[data-note="${pn}"][data-octave="${po}"]`);
+    stopNote(pn, po, prevEl);
+    mouseNoteId = null;
+  }
+});
+
+// ─── 터치 이벤트 (멀티터치 + 글리산도) ───
+keyboard.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  for (const touch of e.changedTouches) {
+    const el = getKeyAtPoint(touch.clientX, touch.clientY);
+    if (!el) continue;
+    const note = el.dataset.note;
+    const octave = parseInt(el.dataset.octave);
+    const noteId = `${note}${octave}`;
+    activeTouches.set(touch.identifier, noteId);
+    startNote(note, octave, el);
+  }
+}, { passive: false });
+
+keyboard.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  for (const touch of e.changedTouches) {
+    const el = getKeyAtPoint(touch.clientX, touch.clientY);
+    if (!el) continue;
+    const note = el.dataset.note;
+    const octave = parseInt(el.dataset.octave);
+    const newId = `${note}${octave}`;
+    const prevId = activeTouches.get(touch.identifier);
+
+    if (prevId && prevId !== newId) {
+      // 이전 건반 릴리즈
+      const pn = prevId.replace(/\d+$/, '');
+      const po = parseInt(prevId.match(/\d+$/)[0]);
+      const prevEl = keyboard.querySelector(`.key[data-note="${pn}"][data-octave="${po}"]`);
+      stopNote(pn, po, prevEl);
+    }
+
+    if (prevId !== newId) {
+      activeTouches.set(touch.identifier, newId);
+      startNote(note, octave, el);
+    }
+  }
+}, { passive: false });
+
+keyboard.addEventListener('touchend', (e) => {
+  for (const touch of e.changedTouches) {
+    const noteId = activeTouches.get(touch.identifier);
+    if (noteId) {
+      const pn = noteId.replace(/\d+$/, '');
+      const po = parseInt(noteId.match(/\d+$/)[0]);
+      const prevEl = keyboard.querySelector(`.key[data-note="${pn}"][data-octave="${po}"]`);
+      stopNote(pn, po, prevEl);
+      activeTouches.delete(touch.identifier);
+    }
+  }
+});
+
+keyboard.addEventListener('touchcancel', (e) => {
+  for (const touch of e.changedTouches) {
+    const noteId = activeTouches.get(touch.identifier);
+    if (noteId) {
+      const pn = noteId.replace(/\d+$/, '');
+      const po = parseInt(noteId.match(/\d+$/)[0]);
+      const prevEl = keyboard.querySelector(`.key[data-note="${pn}"][data-octave="${po}"]`);
+      stopNote(pn, po, prevEl);
+      activeTouches.delete(touch.identifier);
+    }
+  }
+});
 
 // ─── 음 재생/정지 ───
 function startNote(note, octave, el) {
@@ -931,58 +946,98 @@ function stopNote(note, octave, el) {
   if (el) el.classList.remove('active');
 }
 
-// ─── 드래그 스크롤 ───
-viewport.addEventListener('mousedown', (e) => {
-  if (!isDragMode) return;
-  dragState.isDragging = true;
-  dragState.startX = e.pageX;
-  dragState.scrollLeft = viewport.scrollLeft;
-  dragState.movedDistance = 0;
-  viewport.classList.add('dragging');
-});
+// ─── 네비게이션 미니맵 ───
+const navTrack = document.getElementById('nav-track');
+const navWindow = document.getElementById('nav-window');
+const navLabels = document.getElementById('nav-labels');
 
-viewport.addEventListener('mousemove', (e) => {
-  if (!isDragMode || !dragState.isDragging) return;
-  const dx = e.pageX - dragState.startX;
-  dragState.movedDistance = Math.abs(dx);
-  viewport.scrollLeft = dragState.scrollLeft - dx;
-});
-
-document.addEventListener('mouseup', () => {
-  if (dragState.isDragging) {
-    dragState.isDragging = false;
-    viewport.classList.remove('dragging');
-  }
-});
-
-// ─── 모드 전환 ───
-modeToggle.addEventListener('click', () => {
-  isDragMode = !isDragMode;
-  modeToggle.classList.toggle('active', isDragMode);
-  modeToggle.textContent = isDragMode ? '🎹 페이지 모드' : '🔀 드래그 모드';
-  viewport.classList.toggle('drag-mode', isDragMode);
-
-  document.getElementById('octave-down').style.display = isDragMode ? 'none' : '';
-  document.getElementById('octave-up').style.display = isDragMode ? 'none' : '';
-  document.getElementById('octave-display').style.display = isDragMode ? 'none' : '';
-
-  buildKeyboard();
-});
-
-// ─── 키보드 입력 ───
-function resolveKey(kbKey) {
-  const k = kbKey.toLowerCase();
-  if (isDragMode) {
-    const centerOctave = getCenterOctave();
-    if (KB_MAP_OCT1[k]) return { note: KB_MAP_OCT1[k], octave: centerOctave };
-    if (KB_MAP_OCT2[k]) return { note: KB_MAP_OCT2[k], octave: centerOctave + 1 };
-  } else {
-    if (KB_MAP_OCT1[k]) return { note: KB_MAP_OCT1[k], octave: currentOctave };
-    if (KB_MAP_OCT2[k]) return { note: KB_MAP_OCT2[k], octave: currentOctave + 1 };
-  }
-  return null;
+// 라벨 생성
+for (let i = 1; i <= 7; i++) {
+  const span = document.createElement('span');
+  span.textContent = `C${i}`;
+  navLabels.appendChild(span);
 }
 
+function updateNavWindow() {
+  const totalWidth = keyboard.scrollWidth;
+  const viewWidth = viewport.clientWidth;
+  const trackWidth = navTrack.clientWidth;
+
+  if (totalWidth <= viewWidth) {
+    navWindow.style.left = '0px';
+    navWindow.style.width = `${trackWidth}px`;
+    return;
+  }
+
+  const ratio = viewWidth / totalWidth;
+  const winW = Math.max(30, trackWidth * ratio);
+  const scrollRatio = viewport.scrollLeft / (totalWidth - viewWidth);
+  const winLeft = scrollRatio * (trackWidth - winW);
+
+  navWindow.style.width = `${winW}px`;
+  navWindow.style.left = `${winLeft}px`;
+}
+
+// 네비게이션바 드래그로 스크롤
+let navDragging = false;
+let navDragOffset = 0;
+
+function navScrollTo(clientX) {
+  const rect = navTrack.getBoundingClientRect();
+  const trackWidth = navTrack.clientWidth;
+  const winW = navWindow.clientWidth;
+  const totalWidth = keyboard.scrollWidth;
+  const viewWidth = viewport.clientWidth;
+
+  let pos = clientX - rect.left - navDragOffset;
+  pos = Math.max(0, Math.min(pos, trackWidth - winW));
+  const scrollRatio = pos / (trackWidth - winW);
+  viewport.scrollLeft = scrollRatio * (totalWidth - viewWidth);
+  updateNavWindow();
+}
+
+navTrack.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  navDragging = true;
+  const winRect = navWindow.getBoundingClientRect();
+  if (e.clientX >= winRect.left && e.clientX <= winRect.right) {
+    navDragOffset = e.clientX - winRect.left;
+  } else {
+    navDragOffset = navWindow.clientWidth / 2;
+    navScrollTo(e.clientX);
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (navDragging) navScrollTo(e.clientX);
+});
+
+document.addEventListener('mouseup', () => { navDragging = false; });
+
+// 터치 네비게이션
+navTrack.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  navDragging = true;
+  const touch = e.touches[0];
+  const winRect = navWindow.getBoundingClientRect();
+  if (touch.clientX >= winRect.left && touch.clientX <= winRect.right) {
+    navDragOffset = touch.clientX - winRect.left;
+  } else {
+    navDragOffset = navWindow.clientWidth / 2;
+    navScrollTo(touch.clientX);
+  }
+}, { passive: false });
+
+navTrack.addEventListener('touchmove', (e) => {
+  if (navDragging) navScrollTo(e.touches[0].clientX);
+}, { passive: true });
+
+navTrack.addEventListener('touchend', () => { navDragging = false; });
+
+// viewport 스크롤 시 미니맵 동기화 (프로그래밍 방식 스크롤 포함)
+viewport.addEventListener('scroll', updateNavWindow);
+
+// ─── 키보드 입력 ───
 function getCenterOctave() {
   const viewportCenter = viewport.scrollLeft + viewport.clientWidth / 2;
   const keys = keyboard.querySelectorAll('[data-note="C"]');
@@ -996,6 +1051,14 @@ function getCenterOctave() {
     }
   });
   return closest;
+}
+
+function resolveKey(kbKey) {
+  const k = kbKey.toLowerCase();
+  const centerOctave = getCenterOctave();
+  if (KB_MAP_OCT1[k]) return { note: KB_MAP_OCT1[k], octave: centerOctave };
+  if (KB_MAP_OCT2[k]) return { note: KB_MAP_OCT2[k], octave: centerOctave + 1 };
+  return null;
 }
 
 document.addEventListener('keydown', (e) => {
@@ -1015,46 +1078,17 @@ document.addEventListener('keyup', (e) => {
   stopNote(resolved.note, resolved.octave, el);
 });
 
-// ─── 옥타브 조절 ───
-document.getElementById('octave-down').addEventListener('click', () => {
-  if (currentOctave > 1) {
-    currentOctave--;
-    updateOctaveDisplay();
-    buildKeyboard();
-  }
-});
-
-document.getElementById('octave-up').addEventListener('click', () => {
-  if (currentOctave < 6) {
-    currentOctave++;
-    updateOctaveDisplay();
-    buildKeyboard();
-  }
-});
-
+// ─── 키보드 옥타브 이동 (Z/X) ───
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'z' && !isDragMode && currentOctave > 1) {
-    currentOctave--;
-    updateOctaveDisplay();
-    buildKeyboard();
+  if (e.key === 'z') {
+    const oct = getCenterOctave();
+    if (oct > 1) scrollToOctave(oct - 1);
   }
-  if (e.key === 'x' && !isDragMode && currentOctave < 6) {
-    currentOctave++;
-    updateOctaveDisplay();
-    buildKeyboard();
+  if (e.key === 'x') {
+    const oct = getCenterOctave();
+    if (oct < 7) scrollToOctave(oct + 1);
   }
 });
-
-function updateOctaveDisplay() {
-  document.getElementById('octave-display').textContent = `옥타브: ${currentOctave}–${currentOctave + 1}`;
-}
 
 // ─── 초기화 ───
-// 드래그 모드가 기본
-modeToggle.classList.add('active');
-modeToggle.textContent = '🎹 페이지 모드';
-viewport.classList.add('drag-mode');
-document.getElementById('octave-down').style.display = 'none';
-document.getElementById('octave-up').style.display = 'none';
-document.getElementById('octave-display').style.display = 'none';
 buildKeyboard();

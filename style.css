@@ -21,10 +21,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   max-width: 1200px;
-  padding: 12px 16px;
+  padding: 10px 16px;
 }
 
 .controls {
@@ -60,37 +60,12 @@ body {
   white-space: nowrap;
 }
 
-.controls select {
-  padding-right: 8px;
-}
-
-.controls select option {
-  background: #16213e;
-  color: #e0e0e0;
-}
-
-.controls button:hover,
-.controls select:hover {
-  background: #0f3460;
-}
-
-.controls button.active {
-  background: #0f3460;
-  border-color: #4a90d9;
-  color: #fff;
-}
-
-#octave-display {
-  color: #e0e0e0;
-  font-size: 16px;
-  min-width: 100px;
-  text-align: center;
-}
+.controls select { padding-right: 8px; }
+.controls select option { background: #16213e; color: #e0e0e0; }
+.controls button:hover, .controls select:hover { background: #0f3460; }
 
 /* ─── 연습 모드 ─── */
-#practice-panel {
-  width: 100%;
-}
+#practice-panel { width: 100%; }
 
 .practice-header {
   display: flex;
@@ -111,20 +86,9 @@ body {
   transition: background 0.2s;
 }
 
-.practice-header select option {
-  background: #16213e;
-  color: #e0e0e0;
-}
-
-.practice-header button:hover:not(:disabled),
-.practice-header select:hover {
-  background: #0f3460;
-}
-
-.practice-header button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
+.practice-header select option { background: #16213e; color: #e0e0e0; }
+.practice-header button:hover:not(:disabled), .practice-header select:hover { background: #0f3460; }
+.practice-header button:disabled { opacity: 0.4; cursor: default; }
 
 #practice-score {
   color: #e0e0e0;
@@ -167,13 +131,8 @@ body {
   position: relative;
 }
 
-.note-item .note-dur {
-  font-size: 9px;
-  opacity: 0.55;
-  margin-top: 1px;
-}
+.note-item .note-dur { font-size: 9px; opacity: 0.55; margin-top: 1px; }
 
-/* 박자별 너비 */
 .note-item.dur-8 { min-width: 36px; }
 .note-item.dur-4 { min-width: 48px; }
 .note-item.dur-2 { min-width: 68px; }
@@ -186,10 +145,7 @@ body {
   box-shadow: 0 0 16px rgba(74, 144, 217, 0.5);
 }
 
-.note-item.played {
-  background: #1a6b3c;
-  color: #7fda9f;
-}
+.note-item.played { background: #1a6b3c; color: #7fda9f; }
 
 .note-item.wrong {
   background: #6b1a1a;
@@ -210,7 +166,6 @@ body {
   75% { transform: translateX(4px) scale(1.15); }
 }
 
-/* 완료 메시지 */
 .practice-complete {
   color: #7fda9f;
   font-size: 16px;
@@ -219,37 +174,24 @@ body {
   padding: 16px;
 }
 
-/* 건반 하이라이트 (연습 모드) */
 .key.hint-glow {
   box-shadow: 0 0 12px 4px rgba(74, 144, 217, 0.6);
   z-index: 10;
 }
 
-.key.white.hint-glow {
-  background: linear-gradient(to bottom, #d0e4ff, #e8f0ff);
-}
+.key.white.hint-glow { background: linear-gradient(to bottom, #d0e4ff, #e8f0ff); }
+.key.black.hint-glow { background: linear-gradient(to bottom, #3a5a8a, #2a4060); }
 
-.key.black.hint-glow {
-  background: linear-gradient(to bottom, #3a5a8a, #2a4060);
-}
-
-/* ─── 뷰포트 ─── */
+/* ─── 뷰포트 & 건반 ─── */
 #keyboard-viewport {
   overflow: hidden;
   width: 100%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   scrollbar-width: none;
 }
 
-#keyboard-viewport::-webkit-scrollbar {
-  display: none;
-}
-
-#keyboard-viewport.drag-mode {
-  overflow-x: scroll;
-  justify-content: flex-start;
-}
+#keyboard-viewport::-webkit-scrollbar { display: none; }
 
 #keyboard {
   display: flex;
@@ -258,18 +200,6 @@ body {
   -webkit-user-select: none;
   touch-action: none;
   flex-shrink: 0;
-}
-
-.drag-mode #keyboard {
-  touch-action: pan-x;
-}
-
-#keyboard-viewport.drag-mode {
-  cursor: grab;
-}
-
-#keyboard-viewport.drag-mode.dragging {
-  cursor: grabbing;
 }
 
 .key {
@@ -295,9 +225,7 @@ body {
   color: #999;
 }
 
-.key.white:hover {
-  background: linear-gradient(to bottom, #e8e8e8, #f0f0f0);
-}
+.key.white:hover { background: linear-gradient(to bottom, #e8e8e8, #f0f0f0); }
 
 .key.white.active {
   background: linear-gradient(to bottom, #ddd, #e8e8e8);
@@ -317,25 +245,68 @@ body {
   color: #666;
 }
 
-.key.black:hover {
-  background: linear-gradient(to bottom, #444, #222);
-}
+.key.black:hover { background: linear-gradient(to bottom, #444, #222); }
 
 .key.black.active {
   background: linear-gradient(to bottom, #555, #333);
   transform: scaleY(0.98);
 }
 
+/* ─── 네비게이션 미니맵 ─── */
+#nav-bar {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#nav-track {
+  width: 100%;
+  height: 20px;
+  background: #0d1b2e;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  touch-action: none;
+}
+
+#nav-window {
+  position: absolute;
+  top: 1px;
+  height: 18px;
+  background: rgba(74, 144, 217, 0.35);
+  border: 1px solid rgba(74, 144, 217, 0.6);
+  border-radius: 3px;
+  cursor: grab;
+  transition: left 0.1s;
+}
+
+#nav-window:active { cursor: grabbing; }
+
+#nav-labels {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+#nav-labels span {
+  color: #4a6080;
+  font-size: 10px;
+  text-align: center;
+  flex: 1;
+}
+
 .key-hint {
   color: #555;
   font-size: 13px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 @media (max-width: 768px) {
   #piano {
-    gap: 8px;
-    padding: 8px 8px;
+    gap: 6px;
+    padding: 6px 6px;
   }
   .controls {
     flex-wrap: wrap;
@@ -347,8 +318,7 @@ body {
     justify-content: center;
     gap: 6px;
   }
-  .controls button,
-  .controls select {
+  .controls button, .controls select {
     padding: 6px 10px;
     font-size: 13px;
   }
@@ -357,14 +327,11 @@ body {
     gap: 6px;
     margin-bottom: 4px;
   }
-  .practice-header select,
-  .practice-header button {
+  .practice-header select, .practice-header button {
     padding: 5px 10px;
     font-size: 13px;
   }
-  #note-display {
-    height: 46px;
-  }
+  #note-display { height: 46px; }
   .note-item {
     min-width: 32px;
     height: 36px;
@@ -375,20 +342,14 @@ body {
   .note-item.dur-4 { min-width: 38px; }
   .note-item.dur-2 { min-width: 54px; }
   .note-item.dur-1 { min-width: 70px; }
-  .note-item .note-dur {
-    font-size: 7px;
-  }
-  .key.white {
-    width: 44px;
-    height: 160px;
-  }
+  .note-item .note-dur { font-size: 7px; }
+  .key.white { width: 44px; height: 160px; }
   .key.black {
     width: 28px;
     height: 100px;
     margin-left: -14px;
     margin-right: -14px;
   }
-  .key-hint {
-    display: none;
-  }
+  .key-hint { display: none; }
+  #nav-labels span { font-size: 9px; }
 }
