@@ -442,12 +442,14 @@ const SONGS = {
   'three-bears': {
     title: '곰 세 마리',
     octave: 4,
-    // 곰세마리가 한집에있어 아빠곰 엄마곰 애기곰
+    // 곰세마리가 한집에있어 | 아빠곰 엄마곰 애기곰
+    // 아빠곰은 뚱뚱해 | 엄마곰은 날씬해
+    // 애기곰은 너무 귀여워 | 으쓱으쓱 잘한다
     notes: parseSong(
-      'C8 C8 C8 C8 C8 D8 E4 E8 D8 E8 F8 G2 | ' +
-      'G8 G8 G8 G8 E8 E8 E8 E8 C4 E4 G4 G4 E2 | ' +
-      'F4 F4 F4 E4 E4 E4 | D4 D4 D4 D4 G2 | ' +
-      'F4 F4 F4 E4 E4 E4 | D4 D4 E4 D4 C2'
+      'C4 C4 C4 C8 D8 E4 | E8 D8 E8 F8 G2 | ' +
+      'G4 G4 G4 E4 E4 E4 | C4 E4 G4 G4 E2 | ' +
+      'F4 F4 F4 F4 E4 E4 E2 | D4 D4 D4 D4 E4 E4 D2 | ' +
+      'F4 F4 F4 F4 E4 E4 E2 | D4 D4 E4 D4 C2'
     ),
   },
   'mountain-rabbit': {
