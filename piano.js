@@ -569,6 +569,13 @@ const SONGS = {
       'F4 | D#8 E8 F4 C8 C#8 | A#8 C8 G8 G#8 F2'
     ),
   },
+  'school-bell1': {
+    title: '학교벨1',
+    octave: 4,
+    notes: parseSong(
+      'C4 E4 G4 | A4 G4 F4 A4 G4 | F4 G4 E4 C4 | D4 E4 C2'
+    ),
+  },
   'school-bell2': {
     title: '학교벨2',
     octave: 4,
