@@ -1,5 +1,18 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+// 첫 인터랙션에서 AudioContext를 미리 resume
+function ensureAudioReady() {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  document.removeEventListener('touchstart', ensureAudioReady);
+  document.removeEventListener('mousedown', ensureAudioReady);
+  document.removeEventListener('keydown', ensureAudioReady);
+}
+document.addEventListener('touchstart', ensureAudioReady, { passive: true });
+document.addEventListener('mousedown', ensureAudioReady, { passive: true });
+document.addEventListener('keydown', ensureAudioReady);
+
 // ─── 주파수 계산 ───
 function getFrequency(note, octave) {
   const noteIndex = {
@@ -1112,8 +1125,6 @@ keyboard.addEventListener('touchcancel', (e) => {
 
 // ─── 음 재생/정지 ───
 function startNote(note, octave, el) {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-
   const noteId = `${note}${octave}`;
   if (activeNotes.has(noteId)) return;
 
