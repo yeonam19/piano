@@ -34,7 +34,7 @@ const INSTRUMENTS = {
       { ratio: 5, gain: 0.05 },
     ],
     waveform: 'sine',
-    envelope: { attack: 0.01, decay: 0.1, sustain: 0.15, release: 2.0, peak: 0.4, decayLevel: 0.3 },
+    envelope: { attack: 0.003, decay: 0.1, sustain: 0.15, release: 2.0, peak: 0.4, decayLevel: 0.3 },
   },
   epiano: {
     harmonics: [
@@ -336,12 +336,10 @@ function playNote(frequency) {
     masterGain.connect(audioCtx.destination);
   }
 
-  // ADSR 엔벨로프
-  masterGain.gain.setValueAtTime(0, now);
-  masterGain.gain.linearRampToValueAtTime(env.peak, now + env.attack);
-  masterGain.gain.linearRampToValueAtTime(env.decayLevel, now + env.attack + env.decay);
-  masterGain.gain.linearRampToValueAtTime(env.decayLevel * 0.8, now + env.attack + env.decay + env.sustain);
-  masterGain.gain.linearRampToValueAtTime(0, now + duration);
+  // ADSR 엔벨로프 - 즉시 peak로 시작하여 지연 없음
+  masterGain.gain.setValueAtTime(env.peak, now);
+  masterGain.gain.setTargetAtTime(env.decayLevel, now + env.attack, env.decay * 0.3);
+  masterGain.gain.setTargetAtTime(0, now + env.attack + env.decay + env.sustain, env.release * 0.3);
 
   const allOsc = [];
 
@@ -963,9 +961,15 @@ themeSelect.addEventListener('change', () => {
 const activeTouches = new Map(); // touchId → noteId
 
 function getKeyAtPoint(x, y) {
-  // 검은 건반이 z-index가 높으므로 elementsFromPoint로 최상위 키 찾기
   const els = document.elementsFromPoint(x, y);
   return els.find(el => el.classList.contains('key')) || null;
+}
+
+function getKeyFromTarget(target) {
+  // target이 key 자체이거나 key 안의 span일 수 있음
+  if (target.classList && target.classList.contains('key')) return target;
+  if (target.parentElement && target.parentElement.classList.contains('key')) return target.parentElement;
+  return null;
 }
 
 // ─── 건반 생성 ───
@@ -1016,7 +1020,7 @@ let mouseNoteId = null;
 keyboard.addEventListener('mousedown', (e) => {
   e.preventDefault();
   mouseDown = true;
-  const el = getKeyAtPoint(e.clientX, e.clientY);
+  const el = getKeyFromTarget(e.target);
   if (el) {
     const note = el.dataset.note;
     const octave = parseInt(el.dataset.octave);
@@ -1062,7 +1066,7 @@ document.addEventListener('mouseup', () => {
 keyboard.addEventListener('touchstart', (e) => {
   e.preventDefault();
   for (const touch of e.changedTouches) {
-    const el = getKeyAtPoint(touch.clientX, touch.clientY);
+    const el = getKeyFromTarget(touch.target) || getKeyAtPoint(touch.clientX, touch.clientY);
     if (!el) continue;
     const note = el.dataset.note;
     const octave = parseInt(el.dataset.octave);
